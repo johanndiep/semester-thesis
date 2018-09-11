@@ -1,1 +1,0 @@
-In this branch, I will implement the coarse-to-fine method to run the minimalization step more efficient.
