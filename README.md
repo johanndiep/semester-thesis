@@ -10,33 +10,38 @@ sudo -s
 ```
 
 ### Stop all containers
-
 ```bash
 docker stop $(docker ps -a -q)
 ```
 
 ### Delete all containers
-
 ```bash
 docker rm $(docker ps -a -q)
 ```
 
 ### Delete all images
-
 ```bash
 docker rmi $(docker images -q)
 ```
 
-###building image
-
+### Building image
 ```bash
 docker build -t st-ubuntu .
 ```
 
-###run image
-
+### Run image
 ```bash
 docker run -it st-ubuntu
+```
+
+### Show all images
+```bash
+docker images
+```
+
+### Show all containers
+```bash
+docker ps -a
 ```
 
 Implementation

@@ -16,7 +16,7 @@ RUN apt-get -y update && apt-get install -y software-properties-common python-so
 ## Installation of all dependencies
 RUN apt-get update && apt-get install -y \
   libgtk2.0-dev \
-  libjpeg-dev \
+libjpeg-dev \
   libjasper-dev \
   libopenexr-dev cmake python-dev \
   python-numpy python-tk libtbb-dev \
@@ -44,7 +44,3 @@ RUN gcc --version
 RUN g++ --version
 RUN cmake --version
 
-## Cleanup
-RUN apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-  rm -rf /opt/*
