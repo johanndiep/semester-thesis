@@ -14,10 +14,8 @@ RUN uname -r
 RUN apt-get -y update && apt-get install -y software-properties-common python-software-properties
 
 ## Installation of all dependencies
-RUN apt-get update && apt-get install -y \
-  libgtk2.0-dev \
-libjpeg-dev \
-  libjasper-dev \
+RUN apt-get update && apt-get install -y --force-yes \
+  libgtk2.0-dev libjpeg-dev libjasper-dev \
   libopenexr-dev cmake python-dev \
   python-numpy python-tk libtbb-dev \
   libeigen2-dev yasm libfaac-dev \
@@ -29,7 +27,13 @@ libjpeg-dev \
   libglew-dev libboost-all-dev \
   htop nano wget git unzip \
   libgoogle-glog-dev libatlas-base-dev libeigen3-dev \
-  libsuitesparse-dev 
+  libsuitesparse-dev build-essential pkg-config \
+  libtbb2 libpng-dev libtiff-dev \
+  python3-dev python3-tk python3-numpy libwxgtk3.0-dev \
+  libopencv-dev libgtest-dev libftdi-dev \
+  freeglut3-dev zlib1g-dev libusb-1.0-0-dev \
+  libudev-dev libfreenect-dev libassimp-dev \
+  libpcap-dev liboctomap-dev
 
 
 ## Install cmake 3.12.2
@@ -46,25 +50,25 @@ RUN gcc --version
 RUN g++ --version
 RUN cmake --version
 
-## Install Ceres Solver
+## Install Ceres Solver (http://ceres-solver.org/installation.html)
+WORKDIR /home
 RUN git clone https://ceres-solver.googlesource.com/ceres-solver
-RUN cmake ceres-solver
+WORKDIR /home/ceres-solver
+RUN mkdir ceres-bin
+WORKDIR /home/ceres-solver/ceres-bin
+RUN cmake ..
 RUN make -j3
 RUN make test
 RUN make install
 
-## Install OpenCV 3.0
-RUN apt-get update && apt-get install -y --force-yes build-essential cmake git libgtk2.0-dev \
-  pkg-config libavcodec-dev libavformat-dev libswscale-dev \
-  libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev \
-  python3-dev python3-tk python3-numpy && apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+## Install OpenCV 3.0 (https://hub.docker.com/r/harshjv/opencv3/)
 
+ENV HOME /root
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN mkdir ~/opencv
-
 RUN cd ~/opencv && git clone https://github.com/Itseez/opencv_contrib.git && cd opencv_contrib && git checkout 3.0.0
 RUN cd ~/opencv && git clone https://github.com/Itseez/opencv.git && cd opencv && git checkout 3.0.0
-
 RUN cd ~/opencv/opencv && mkdir release && cd release && \
   cmake -D CMAKE_BUILD_TYPE=RELEASE \
   -D CMAKE_INSTALL_PREFIX=/usr/local \
@@ -76,8 +80,17 @@ RUN cd ~/opencv/opencv && mkdir release && cd release && \
   -D WITH_V4L=ON \
   -D WITH_XINE=ON \
   -D WITH_TBB=ON ..
-
 RUN cd ~/opencv/opencv/release && make -j $(nproc) && make install
 
+## Install mrpt 1.5 (https://github.com/MRPT/mrpt/tree/mrpt-1.5)
+WORKDIR /home
+RUN mkdir mrpt-1.5
+WORKDIR /mrp-1.5
+RUN git clone https://github.com/MRPT/mrpt.git -b mrpt-1.5
+RUN mkdir build
+WORKDIR build
+RUN cmake ../mrpt
+
 ## Source code for motion blur algorithm
-RUN git clone https://gitlab.com/jdiep/semester-thesis.git /home/motion-blur-cam-pose-tracker
+WORKDIR /home
+RUN git clone https://gitlab.com/jdiep/semester-thesis.git
