@@ -85,11 +85,9 @@ RUN cd ~/opencv/opencv/release && make -j $(nproc) && make install
 ## Install mrpt 1.5 (https://github.com/MRPT/mrpt/tree/mrpt-1.5)
 WORKDIR /home
 RUN mkdir mrpt-1.5
-WORKDIR /mrp-1.5
-RUN git clone https://github.com/MRPT/mrpt.git -b mrpt-1.5
-RUN mkdir build
-WORKDIR build
-RUN cmake ../mrpt
+RUN cd mrpt-1.5 && git clone https://github.com/MRPT/mrpt.git -b mrpt-1.5
+WORKDIR /home/mrpt-1.5
+RUN mkdir build && cd build && cmake ../mrpt
 
 ## Source code for motion blur algorithm
 WORKDIR /home
