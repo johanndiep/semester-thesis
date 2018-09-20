@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y --force-yes \
   libopencv-dev libgtest-dev libftdi-dev \
   freeglut3-dev zlib1g-dev libusb-1.0-0-dev \
   libudev-dev libfreenect-dev libassimp-dev \
-  libpcap-dev liboctomap-dev libmrpt-dev
+  libpcap-dev liboctomap-dev libmrpt-dev mrpt-apps
 
 
 ## Install cmake 3.12.2
@@ -83,6 +83,8 @@ RUN cd ~/opencv/opencv/release && make -j $(nproc) && make install
 
 ## Install mrpt 1.5 (https://github.com/MRPT/mrpt/tree/mrpt-1.5)
 WORKDIR /home
+RUN add-apt-repository ppa:joseluisblancoc/mrpt-1.5
+RUN apt-get update
 RUN mkdir mrpt-1.5
 RUN cd mrpt-1.5 && git clone https://github.com/MRPT/mrpt.git -b mrpt-1.5
 WORKDIR /home/mrpt-1.5
