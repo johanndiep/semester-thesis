@@ -89,7 +89,7 @@ void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoi
     // store the resulting 2D pixel in pixel_coords.
     for (const auto &world_p : points3D) {
         // calculate p in reproj camera pose frame
-        mrpt::poses::CPoint3D cam_p = world_p * reproj_pose;
+        mrpt::poses::CPoint3D cam_p = world_p - reproj_pose;
 
         const auto pix_x =
                 static_cast<float>(cam_p.x() * internal_calibration.fx / cam_p.z() + internal_calibration.cx);
