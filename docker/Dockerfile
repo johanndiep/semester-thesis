@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y --force-yes \
   libopencv-dev libgtest-dev libftdi-dev \
   freeglut3-dev zlib1g-dev libusb-1.0-0-dev \
   libudev-dev libfreenect-dev libassimp-dev \
-  libpcap-dev liboctomap-dev
+  libpcap-dev liboctomap-dev libmrpt-dev
 
 
 ## Install cmake 3.12.2
@@ -62,7 +62,6 @@ RUN make test
 RUN make install
 
 ## Install OpenCV 3.0 (https://hub.docker.com/r/harshjv/opencv3/)
-
 ENV HOME /root
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -87,8 +86,10 @@ WORKDIR /home
 RUN mkdir mrpt-1.5
 RUN cd mrpt-1.5 && git clone https://github.com/MRPT/mrpt.git -b mrpt-1.5
 WORKDIR /home/mrpt-1.5
-RUN mkdir build && cd build && cmake ../mrpt
+RUN mkdir build && cd build && cmake ../mrpt && make
 
 ## Source code for motion blur algorithm
 WORKDIR /home
 RUN git clone https://gitlab.com/jdiep/semester-thesis.git
+
+RUN apt-get update
