@@ -84,7 +84,6 @@ RUN cd ~/opencv/opencv/release && make -j $(nproc) && make install
 ## Install mrpt 1.5 (https://github.com/MRPT/mrpt/tree/mrpt-1.5)
 WORKDIR /home
 RUN add-apt-repository ppa:joseluisblancoc/mrpt-1.5
-RUN apt-get update
 RUN mkdir mrpt-1.5
 RUN cd mrpt-1.5 && git clone https://github.com/MRPT/mrpt.git -b mrpt-1.5
 WORKDIR /home/mrpt-1.5
@@ -93,4 +92,6 @@ RUN mkdir build && cd build && cmake ../mrpt && make
 ## Source code for motion blur algorithm
 WORKDIR /home
 RUN git clone https://gitlab.com/jdiep/semester-thesis -b 2-dockerfile-to-install-all-dependencies-for-the-project
+
+## Finishing off
 RUN apt-get update
