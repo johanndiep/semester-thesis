@@ -44,9 +44,11 @@ docker images
 docker ps -a
 ```
 
-Results so far
+Parameters chosen so far
 ------------
 
+* N_poses
+*
 
 
 Implementation
