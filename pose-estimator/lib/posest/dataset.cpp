@@ -71,7 +71,7 @@ void posest::Dataset::readCameraCalibration(map<string, CameraCalibration> &cams
             string label;
             line_reader >> label >> current_cam;
             if (cams.find(current_cam) == cams.end()) {
-                throw std::runtime_error("no intrinsic configuration found for camera");
+                throw std::runtime_error("no extrinsic configuration found for camera");
             }
         }
 
