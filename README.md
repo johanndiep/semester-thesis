@@ -44,7 +44,7 @@ docker images
 docker ps -a
 ```
 
-Implementation
+New implementation
 ------------
 
 * Coarse-to-fine image resolution: Implementation of the coarse-to-fine method to run the minimalization step more efficiently.
