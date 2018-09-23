@@ -44,12 +44,19 @@ docker images
 docker ps -a
 ```
 
+### Copy file to host machine
+```bash
+
+docker cp cocky_vaughan:/home/semester-thesis/file /home/johann
+```
+
+
 Hyperparameters chosen so far
 ------------
 
 * Number of poses to generate synthetical image: N_poses (must be defined, tested between 3-20)
-* times at pose P_t: t_t (timestamp at closing shutter)
-* Exposure time: t_exp
+* times at pose P_t: t_t (timestamp at closing shutter, given in the dataset)
+* Exposure time: t_exp (must be given by the camera setup)
 * Pose at the end: P_t <-> Initialization P_tilde -> Initialization offset 
 * Pixel in the resulting blurred image are set to be non-empty only if 1/5 of the reprojected poses has information
 * Penalizing empty pixels: a =5
@@ -59,7 +66,6 @@ Hyperparameters chosen so far
 * Gradient of intensity: nabla_I (Sobel filter)
 * Scaling factor: sigma_0 (tuning such that pertubuation is not higher than 2, 0.02-0.30)
 * Decay factor: alpha (set to 1x10^-10)
-
 
 
 
