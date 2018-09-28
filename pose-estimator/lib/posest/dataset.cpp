@@ -29,10 +29,10 @@ void posest::Dataset::readCameraCalibration(map<string, CameraCalibration> &cams
     const string extrinsics_filename = "/extrinsics.txt";
     const string intrinsics_filename = "/intrinsics.txt";
     ifstream intrinsics_file(base_path + intrinsics_filename);
-    ifstream extrinsics_fiele(base_path + extrinsics_filename);
+    ifstream extrinsics_file(base_path + extrinsics_filename);
 
     // test if files can be read
-    if (intrinsics_file.fail() || extrinsics_fiele.fail()) {
+    if (intrinsics_file.fail() || extrinsics_file.fail()) {
         throw std::runtime_error("can't read camera calibration files");
     }
 
@@ -64,7 +64,7 @@ void posest::Dataset::readCameraCalibration(map<string, CameraCalibration> &cams
     current_cam = "";
 
     // read and parse extrinsics
-    while (getline(extrinsics_fiele, line)) {
+    while (getline(extrinsics_file, line)) {
         std::istringstream line_reader(line);
 
         if (starts_with(line, "devName ")) {
@@ -106,7 +106,7 @@ void posest::Dataset::readCameraCalibration(map<string, CameraCalibration> &cams
         }
     }
 
-    // apply scaling factor
+    // apply scaling factor, everything in meter
     for (auto &cam : cams) {
         double s = cam.second.scaling_factor;
         cam.second.external.m_coords[0] *= s;
