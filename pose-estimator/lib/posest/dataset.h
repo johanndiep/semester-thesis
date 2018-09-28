@@ -145,6 +145,14 @@ class Dataset {
     cv::Mat_<uchar> readSharpImage(int img_index, int cam_index) const;
 
     /**
+    * Read a sharp image from the dataset and downscale it by a factor (converted to grayscale)
+    * @param img_index usually it starts from 1 (and not 0)
+    * @param cam_index use camera getCameras()[can_index]
+    * @return
+    */
+    cv::Mat_<uchar> readSharpScaledImage(int img_index, int cam_index, double image_scale) const;
+
+    /**
      * Get the pose of a camera when a certain image was taken.
      * This is always the pose of the closing shutter.
      * @param img_index usually it starts from 1 (and not 0)

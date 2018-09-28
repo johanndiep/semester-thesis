@@ -173,13 +173,13 @@ void posest::Dataset::readImageLogs() {
         } else if (img_type_str == "rgb") {
             log_entry.img_type = rgb;
         } else {
-            throw std::runtime_error("unknown image type read in imageLogs.txt file");
+            throw std::runtime_error("unknown image type readcam_index in imageLogs.txt file");
         }
         this->image_log.push_back(log_entry);
     }
 }
 
-void posest::Dataset::read() {
+void posest::Dataset::read() {current_cam
     map<string, CameraCalibration> cams;
     readCameraCalibration(cams);
     readImageLogs();
@@ -276,6 +276,14 @@ cv::Mat_<uchar> posest::Dataset::readSharpImage(const int index, const int cam_i
     string cam_name = this->cameras[cam_index];
     string path = base_path + "/rgb/" + cam_name + "/" + std::to_string(index) + ".png";
     return cv::imread(path, cv::IMREAD_GRAYSCALE);
+}
+
+cv::Mat_<uchar> posest::Dataset::readSharpScaledImage(const int index, const int cam_index, double image_scale) const {
+    string cam_name = this->cameras[cam_index];
+    string path = base_path + "/rgb/" + cam_name + "/" + std::to_string(index) + ".png";
+    cv::Mat_<uchar> LoadedImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
+    cv::resize(LoadedImage, ScaledImage, cv::Size(LoadedImage.cols/image_scale, LoadedImage.rows/image_scale));
+    return ScaledImage;
 }
 
 double posest::Dataset::getTimestamp(int img_index, int cam_index) const {
