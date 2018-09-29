@@ -282,8 +282,8 @@ cv::Mat_<uchar> posest::Dataset::readSharpScaledImage(const int index, const int
     string cam_name = this->cameras[cam_index];
     string path = base_path + "/rgb/" + cam_name + "/" + std::to_string(index) + ".png";
     cv::Mat_<uchar> LoadedImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
-    cv::resize(LoadedImage, ScaledImage, cv::Size(LoadedImage.cols/image_scale, LoadedImage.rows/image_scale));
-    return ScaledImage;
+    cv::resize(LoadedImage, LoadedImage, cv::Size(LoadedImage.cols/image_scale, LoadedImage.rows/image_scale));
+    return LoadedImage;
 }
 
 double posest::Dataset::getTimestamp(int img_index, int cam_index) const {
