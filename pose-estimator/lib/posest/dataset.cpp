@@ -179,7 +179,7 @@ void posest::Dataset::readImageLogs() {
     }
 }
 
-void posest::Dataset::read() {current_cam
+void posest::Dataset::read() {
     map<string, CameraCalibration> cams;
     readCameraCalibration(cams);
     readImageLogs();
