@@ -227,7 +227,11 @@ cv::Mat_<double> posest::Dataset::readDepthImage(const int index, const int cam_
     return depth_map;
 }
 
+cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, double image_scale) {
 
+    
+    
+}
 
 cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, double sigma_0) const {
     // Read sharp ref image

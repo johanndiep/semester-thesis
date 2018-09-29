@@ -114,6 +114,13 @@ class Dataset {
     cv::Mat_<double> readDepthImage(int img_index, int cam_index) const;
 
     /**
+    * Downscale the depth map for the coarse-to-parse method
+    * @param depth_map is the original depth map
+    * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
+    */
+    cv::Mat_<double> readScaledDepthImage(cv::Mat_<double> depth_map, double image_scale) const;
+
+    /**
      * Read depth map and perturbe values with an additive Gaussian noise with standard deviation sigma and zero mean.
      *
      * sigma is computed as follows:
