@@ -68,7 +68,7 @@ class Dataset {
     std::vector<std::string> cameras;
     std::vector<ImageLogEntry> image_log;
     const std::string base_path;
-
+    
     void readCameraCalibration(std::map<std::string, CameraCalibration> &cams);
 
     void readCameraTrajectory(const mrpt::poses::CPose3DQuat &camera_offset, Trajectory &trajectory);
@@ -110,7 +110,6 @@ class Dataset {
      * Read a depth map for image img_index taken by camera cam_index
      * @param img_index usually it starts from 1 (and not 0)
      * @param cam_index use camera getCameras()[cam_index]
-     * @return
      */
     cv::Mat_<double> readDepthImage(int img_index, int cam_index) const;
 
@@ -137,6 +136,15 @@ class Dataset {
     cv::Mat_<uchar> readBlurredImage(int img_index, int cam_index) const;
 
     /**
+     * Read a blurred image from the dataset and downscale it by a factor
+     * @param img_index usually it starts from 1 (and not 0)
+     * @param cam_index use camera getCameras()[cam_index]
+     * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
+     * @return
+     */
+    cv::Mat_<uchar> readBlurredScaledImage(int img_index, int cam_index) const;
+
+    /**
      * Read a sharp image from the dataset (converted to grayscale)
      * @param img_index usually it starts from 1 (and not 0)
      * @param cam_index use camera getCameras()[cam_index]
@@ -148,6 +156,7 @@ class Dataset {
     * Read a sharp image from the dataset and downscale it by a factor (converted to grayscale)
     * @param img_index usually it starts from 1 (and not 0)
     * @param cam_index use camera getCameras()[can_index]
+    * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
     * @return
     */
     cv::Mat_<uchar> readSharpScaledImage(int img_index, int cam_index, double image_scale) const;

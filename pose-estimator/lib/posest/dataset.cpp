@@ -227,6 +227,8 @@ cv::Mat_<double> posest::Dataset::readDepthImage(const int index, const int cam_
     return depth_map;
 }
 
+
+
 cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, double sigma_0) const {
     // Read sharp ref image
     cv::Mat_<uchar> ref_img = readSharpImage(img_index, cam_index);
@@ -270,6 +272,14 @@ cv::Mat_<uchar> posest::Dataset::readBlurredImage(const int index, const int cam
     string cam_name = this->cameras[cam_index];
     string path = base_path + "/blurred/" + cam_name + "/" + std::to_string(index) + ".png";
     return cv::imread(path, cv::IMREAD_GRAYSCALE);
+}
+
+cv::Mat_<uchar> posest::Dataset::readBlurredScaledImage(const int index, const int cam_index, double image_scale) const {
+    string cam_name = this->cameras[cam_index];
+    string path = base_path + "/blurred/" + cam_name + "/" + std::to_string(index) + ".png";
+    cv::Mat_<uchar> LoadedImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
+    cv::resize(LoadedImage, LoadedImage, cv::Size(LoadedImage.cols/image_scale, LoadedImage.rows/image_scale));
+    return LoadedImage;
 }
 
 cv::Mat_<uchar> posest::Dataset::readSharpImage(const int index, const int cam_index) const {
