@@ -58,7 +58,7 @@ class ReprojectorImpl : public Reprojector {
      * @param reproj_pose
      * @param pixel_coords
      */
-    void reproject(const mrpt::poses::CPose3DQuat &reproj_pose, std::vector<mrpt::math::TPoint3D> &pixel_coords) const;
+    void reproject(const mrpt::poses::CPose3DQuat &reproj_pose, std::vector<mrpt::math::TPoint3D> &pixel_coords, const double image_scale = 1) const;
 
     /**
      *
