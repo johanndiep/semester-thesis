@@ -227,12 +227,6 @@ cv::Mat_<double> posest::Dataset::readDepthImage(const int index, const int cam_
     return depth_map;
 }
 
-cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, double image_scale) {
-
-    
-    
-}
-
 cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, double sigma_0) const {
     // Read sharp ref image
     cv::Mat_<uchar> ref_img = readSharpImage(img_index, cam_index);
@@ -270,6 +264,13 @@ cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, d
         }
     }
     return depth_map;
+}
+
+cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, double image_scale) {
+
+    cv::Mat_<double> depth_map_scaled;
+    cv::resize(depth_map, depth_map_scaled, cv::Size(depth_map.cols/image_scale, depth_map.rows/image_scale));
+    
 }
 
 cv::Mat_<uchar> posest::Dataset::readBlurredImage(const int index, const int cam_index) const {
