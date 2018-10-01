@@ -224,6 +224,7 @@ cv::Mat_<double> posest::Dataset::readDepthImage(const int index, const int cam_
         }
         row++;
     }
+    cv::imwrite("Step1.JPG", depth_map);
     return depth_map;
 }
 
