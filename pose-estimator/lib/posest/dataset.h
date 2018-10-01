@@ -149,7 +149,7 @@ class Dataset {
      * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
      * @return
      */
-    cv::Mat_<uchar> readBlurredScaledImage(int img_index, int cam_index) const;
+    cv::Mat_<uchar> readBlurredScaledImage(int img_index, int cam_index, double image_scale) const;
 
     /**
      * Read a sharp image from the dataset (converted to grayscale)
