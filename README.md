@@ -77,7 +77,8 @@ Implementation
 Results
 ------------
 
-* no changes
+* no changes: cam_index 0, dataset_path /home/semester-thesis/RelisticRendering-dataset/, ref_img_index 1, blurred_img_index 2, n_images 20, initial_offset_pos 0.05, initial_offset_rot 0, output_file "results", sigma 0
+ 
 
 `0,1,2,0,0.0397207,0.0267231,-0.0144272,1,0,0,0,0.05,0,20,-0.00707484,0.00901413,
 0.00266361,0.999998,0.000429444,0.00177906,0.000122679,0.0117645,0.00366853,22,592.71,1`
