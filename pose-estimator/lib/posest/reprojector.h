@@ -35,7 +35,7 @@ class ReprojectorImpl : public Reprojector {
     ReprojectorImpl(const posest::InternalCalibration &ic,
                     const cv::Mat_<uchar> &ref_img,
                     const cv::Mat_<double> &ref_depth,
-                    const mrpt::poses::CPose3DQuat &ref_pose
+                    const mrpt::poses::CPose3DQuat &ref_pose,
                     const double image_scale);
 
     /**
