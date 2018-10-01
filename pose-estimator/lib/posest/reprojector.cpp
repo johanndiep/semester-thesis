@@ -34,7 +34,7 @@ ReprojectorImpl::ReprojectorImpl(const posest::InternalCalibration &ic,
             double cam_z = z_file / std::sqrt(
                     ((static_cast<double>(pix_x) - (ic.cx/image_scale) / ic.fx) * ((static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx) +
                     ((static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy) * ((static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy)
-                    + 1);
+                    + 1));
             double cam_x = cam_z * (static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx;
             double cam_y = cam_z * (static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy;
             const mrpt::poses::CPoint3D cam_p(cam_x, cam_y, cam_z);
