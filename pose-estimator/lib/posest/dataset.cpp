@@ -266,8 +266,7 @@ cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, d
     return depth_map;
 }
 
-cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, double image_scale) {
-
+cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, double image_scale) const {
     cv::Mat_<double> depth_map_scaled;
     cv::resize(depth_map, depth_map_scaled, cv::Size(depth_map.cols/image_scale, depth_map.rows/image_scale));
     
