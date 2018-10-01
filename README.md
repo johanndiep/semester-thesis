@@ -46,10 +46,14 @@ docker ps -a
 
 ### Copy file to host machine
 ```bash
-
 docker cp cocky_vaughan:/home/semester-thesis/file /home/johann
 ```
 
+### After running bash
+```bash
+apt-get install libmrpt-dev
+git clone https://gitlab.com/jdiep/semester-thesis -b 1-coarse-to-fine-implementation
+```
 
 Hyperparameters chosen so far
 ------------
