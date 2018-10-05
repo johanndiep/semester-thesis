@@ -19,7 +19,7 @@ ReprojectorImpl::ReprojectorImpl(const posest::InternalCalibration &ic,
                                  const cv::Mat_<uchar> &ref_img,
                                  const cv::Mat_<double> &ref_depth,
                                  const mrpt::poses::CPose3DQuat &ref_pose,
-                                 const double image_scale = 1)
+                                 const double image_scale)
         : internal_calibration(ic), ref_img(ref_img) {
     // allocate enough space for each pixel
     points3D.reserve(ref_img.total());
@@ -81,7 +81,7 @@ void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, Mat_<uchar> &rep
  * @param pixel_coords the resulting pixel coordinates are written into this vector. The z axis is the distance from
  *                      the cam.
  */
-void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoint3D> &pixel_coords, const double image_scale = 1) const {
+void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoint3D> &pixel_coords, const double image_scale) const {
     // allocate enough space for each pixel
     pixel_coords.clear();
     pixel_coords.reserve(points3D.size());
