@@ -23,7 +23,6 @@ class ReprojectorImpl : public Reprojector {
     std::vector<mrpt::poses::CPoint3D> points3D;
     const InternalCalibration internal_calibration;
     const cv::Mat_<uchar> ref_img;
-    const double image_scale;
 
  public:
     /**
