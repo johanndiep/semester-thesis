@@ -270,7 +270,7 @@ cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, d
 cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, const double image_scale) const {
     cv::Mat_<double> depth_map_scaled;
     cv::resize(depth_map, depth_map_scaled, cv::Size(depth_map.cols/image_scale, depth_map.rows/image_scale));
-    
+    return depth_map_scaled;
 }
 
 cv::Mat_<uchar> posest::Dataset::readBlurredImage(const int index, const int cam_index) const {

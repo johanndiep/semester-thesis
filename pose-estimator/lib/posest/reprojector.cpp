@@ -81,7 +81,7 @@ void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, Mat_<uchar> &rep
  * @param pixel_coords the resulting pixel coordinates are written into this vector. The z axis is the distance from
  *                      the cam.
  */
-void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoint3D> &pixel_coords) const {
+void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoint3D> &pixel_coords, const double image_scale = 1) const {
     // allocate enough space for each pixel
     pixel_coords.clear();
     pixel_coords.reserve(points3D.size());
