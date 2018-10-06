@@ -45,13 +45,13 @@ ReprojectorImpl::ReprojectorImpl(const posest::InternalCalibration &ic,
     }
 }
 
-void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, Mat_<uchar> &reproj_img, Mat_<bool> &mask) const {
+void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, Mat_<uchar> &reproj_img, Mat_<bool> &mask, const double image_scale) const {
     assert(reproj_img.channels() == 1);
     reproj_img.create(ref_img.size());
     mask.create(ref_img.size());
 
     std::vector<mrpt::math::TPoint3D> pixel_coords;
-    reproject(reproj_pose, pixel_coords);
+    reproject(reproj_pose, pixel_coords, image_scale);
 
     cv::Rect img_bounds(cv::Point(), reproj_img.size());
     auto ref_img_itr = ref_img.begin();
