@@ -11,9 +11,9 @@ using mrpt::math::CArrayDouble;
 namespace posest {
 BlurrerImpl::BlurrerImpl(const CPose3DQuat &ref_pose, const double ref_time, const double end_time,
                          const double exposure_time, const int n_images, const cv::Mat &ref_image,
-                         const Reprojector &reprojector)
+                         const Reprojector &reprojector, const double image_scale)
         : ref_pose(ref_pose), ref_time(ref_time), end_time(end_time), exposure_time(exposure_time), n_images(n_images),
-          ref_image(ref_image), reprojector(reprojector) {}
+          ref_image(ref_image), reprojector(reprojector), image_scale(image_scale) {}
 
 void BlurrerImpl::blur(const CPose3DQuat &end_pose, cv::Mat_<uchar> &blurred_img,
                        cv::Mat_<bool> &blurred_img_mask) const {
@@ -51,7 +51,7 @@ void BlurrerImpl::blur(const CPose3DQuat &end_pose, cv::Mat_<uchar> &blurred_img
         curr_mask.setTo(false);
 
         // Obtain projected image according to pose
-        reprojector.reproject(CPose3DQuat(curr_pose), curr_image, curr_mask);
+        reprojector.reproject(CPose3DQuat(curr_pose), curr_image, curr_mask, image_scale);
 
         sum_of_images += curr_image;
         sum_of_masks += curr_mask;

@@ -136,31 +136,39 @@ class ExecutionParametrization {
     const ExecutionResults *posest_start(const Dataset &dataset) {
         if (execution_results != nullptr) delete (execution_results);
         // read information from dataset
-        const Mat_<uchar> &ref_sharp = dataset.readSharpImage(ref_img_index, cam_index);
+        const double image_scale = 2; // set this parameter to 1 if ctp should be deactivated
+        //const Mat_<uchar> &ref_sharp = dataset.readSharpImage(ref_img_index, cam_index);
+        const Mat_<uchar> &ref_sharp = dataset.readSharpScaledImage(ref_img_index, cam_index, image_scale);
         const CPose3DQuat &ref_pose = dataset.getPose(ref_img_index, cam_index);
-        const Mat_<uchar> &blurred_img = dataset.readBlurredImage(blurred_img_index, cam_index);
+        //const Mat_<uchar> &blurred_img = dataset.readBlurredImage(blurred_img_index, cam_index);
+        const Mat_<uchar> &blurred_img = dataset.readBlurredScaledImage(blurred_img_index, cam_index, image_scale);
         const InternalCalibration &internalCalibration = dataset.getInternalCalibration(cam_index);
         const double exposure_time = dataset.getExposureTime();
         const CPose3DQuat &blurred_exact_pose = dataset.getPoseAtTime(blurred_img_index * 0.1, cam_index);
         Mat_<double> ref_depth;
         if (sigma == 0) {
             ref_depth = dataset.readDepthImage(ref_img_index, cam_index);
-        } else {
+            ref_depth = dataset.readScaledDepthImage(ref_depth, image_scale);
+        } 
+        else {
             ref_depth = dataset.readDepthImage(ref_img_index, cam_index, sigma);
+            ref_depth = dataset.readScaledDepthImage(ref_depth, image_scale);
+
         }
 
         // calculate pose where solver should start in the first iteration
         CPose3DQuat initial_pose = blurred_exact_pose + initial_offset;
 
         // setup pipeline with reprojector, blurrer and solver
-        posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose);
+        posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose, image_scale);
         posest::BlurrerImpl blurrer(ref_pose,
                                     ref_img_index * 0.1,
                                     blurred_img_index * 0.1,
                                     dataset.getExposureTime(),
                                     n_images,
                                     ref_sharp,
-                                    reprojector);
+                                    reprojector,
+                                    image_scale);
         posest::Solver solver(blurred_img, blurrer);
         if (!snap_only_final && snapshot_path.length()) {
             solver.set_snapshot_path(snapshot_path);

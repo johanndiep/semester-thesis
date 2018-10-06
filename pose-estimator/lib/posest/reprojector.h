@@ -68,7 +68,8 @@ class ReprojectorImpl : public Reprojector {
      */
     void reproject(const mrpt::poses::CPose3DQuat &reproj_pose,
                    cv::Mat_<uchar> &reproj_img,
-                   cv::Mat_<bool> &mask) const override;
+                   cv::Mat_<bool> &mask,
+                   const double image_scale = 1) const override;
 };
 
 };  // namespace posest
