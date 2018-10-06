@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 
     // Uncomment the following lines in order to generate a snapshot image after each solving iteration
     params.snapshot_path = output_file + ".png";
-    params.snap_only_final = false;
+    sparams.snap_only_final = false;
 
     // print out parametrization
     cout << endl << "=============================================================" << endl;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     file << err_rot[1] << ",";                          // err_qx
     file << err_rot[2] << ",";                          // err_qy
     file << err_rot[3] << ",";                          // err_qz
-    file << resultsld->get_distance_error() << ",";       // err_dist
+    file << results->get_distance_error() << ",";       // err_dist
     file << results->get_angular_error() << ",";        // err_rot_angle
     file << results->get_num_iterations() << ",";       // num_iterations
     file << results->get_total_time() << ",";           // total_time
