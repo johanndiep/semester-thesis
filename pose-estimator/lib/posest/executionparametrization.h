@@ -49,6 +49,15 @@ class ExecutionResults {
     }
 
     /**
+     * Returns the solved pose.
+     * (coordinates are given in meters)
+     * @return
+     */    
+    const mrpt::math::CArrayDouble<3> &get_solved_pose() const {
+        return solved_pose.m_coords;
+    }
+
+    /**
      * Returns the error between ground truth orientation and the solved orientation as a quaternion
      * @return
      */
