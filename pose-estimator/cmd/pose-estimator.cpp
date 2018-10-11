@@ -148,31 +148,31 @@ int main(int argc, char *argv[]) {
     // write results to output file
     std::ofstream file;
     file.open(output_file + std::string(".txt"));
-    file << "cam_index: " << params.cam_index << ",";                           // cam_index
-    file << "ref_img_index: " << params.ref_img_index << ",";                   // ref_img_index
-    file << "blurred_img_index: " << params.blurred_img_index << ",";           // blurred_img_index
+    file << "cam_index: " << params.cam_index << ", ";                           // cam_index
+    file << "ref_img_index: " << params.ref_img_index << ", ";                   // ref_img_index
+    file << "blurred_img_index: " << params.blurred_img_index << ", ";           // blurred_img_index
     file << "sigma: "<< params.sigma << ",";                                    // depth_perturbation_sigma
-    file << "initial_offset: " << params.initial_offset.m_coords[0] << ",";     // initial_offset_x
+    file << "initial_offset: " << params.initial_offset.m_coords[0] << ", ";     // initial_offset_x
     file << params.initial_offset.m_coords[1] << ",";                           // initial_offset_y
     file << params.initial_offset.m_coords[2] << ",";                           // initial_offset_z
     file << params.initial_offset.m_quat[0] << ",";                             // initial_offset_qw
     file << params.initial_offset.m_quat[1] << ",";                             // initial_offset_qx
     file << params.initial_offset.m_quat[2] << ",";                             // initial_offset_qy
-    file << params.initial_offset.m_quat[3] << ",";                             // initial_offset_qz
-    file << "initial_offset_dist: " << params.initial_offset.norm() << ",";     // initial_offset_dist
-    file << "initial_offset_rot_angle: " << initial_offset_rot << ",";          // initial_offset_rot_angle
-    file << "n_images: " << params.n_images << ",";                             // n_images
-    file << "err: " << err_pos[0] << ",";                                       // err_x
+    file << params.initial_offset.m_quat[3] << ", ";                             // initial_offset_qz
+    file << "initial_offset_dist: " << params.initial_offset.norm() << ", ";     // initial_offset_dist
+    file << "initial_offset_rot_angle: " << initial_offset_rot << ", ";          // initial_offset_rot_angle
+    file << "n_images: " << params.n_images << ", ";                             // n_images
+    file << "err: " << err_pos[0] << ", ";                                       // err_x
     file << err_pos[1] << ",";                                                  // err_y
     file << err_pos[2] << ",";                                                  // err_z
     file << err_rot[0] << ",";                                                  // err_qw
     file << err_rot[1] << ",";                                                  // err_qx
     file << err_rot[2] << ",";                                                  // err_qy
-    file << err_rot[3] << ",";                                                  // err_qz
-    file << "err_dist: " << results->get_distance_error() << ",";               // err_dist
-    file << "err_rot_angle: " << results->get_angular_error() << ",";           // err_rot_angle
-    file << "num_iterations: " << results->get_num_iterations() << ",";         // num_iterations
-    file << "total_time: " << results->get_total_time() << ",";                 // total_time
+    file << err_rot[3] << ", ";                                                  // err_qz
+    file << "err_dist: " << results->get_distance_error() << ", ";               // err_dist
+    file << "err_rot_angle: " << results->get_angular_error() << ", ";           // err_rot_angle
+    file << "num_iterations: " << results->get_num_iterations() << ", ";         // num_iterations
+    file << "total_time: " << results->get_total_time() << ", ";                 // total_time
     file << "convergence: " << results->has_converged();                        // convergence
     file << endl;
 
