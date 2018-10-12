@@ -139,7 +139,7 @@ class ExecutionParametrization {
     CPose3DQuat solved_pose_lower_scale;
 
     ExecutionParametrization() : execution_results(nullptr), cam_index(0), ref_img_index(1), blurred_img_index(2),
-                                 n_images(5), snapshot_path(), snap_only_final(true), sigma(0) {}  // default
+                                 n_images(5), snapshot_path(), snap_only_final(true), sigma(0), exact_initial_pose(false) {}  // default
 
     /**
      * Execute the whole algorithm for the dataset
@@ -149,7 +149,7 @@ class ExecutionParametrization {
     const ExecutionResults *posest_start(const Dataset &dataset) {
         if (execution_results != nullptr) delete (execution_results);
         // read information from dataset
-        const double image_scale = 4; // set this parameter to 1 if ctp should be deactivated
+        const double image_scale = 2; // set this parameter to 1 if ctp should be deactivated
         //const Mat_<uchar> &ref_sharp = dataset.readSharpImage(ref_img_index, cam_index);
         const Mat_<uchar> &ref_sharp = dataset.readSharpScaledImage(ref_img_index, cam_index, image_scale);
         const CPose3DQuat &ref_pose = dataset.getPose(ref_img_index, cam_index);
