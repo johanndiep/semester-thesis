@@ -133,6 +133,10 @@ class ExecutionParametrization {
     bool snap_only_final;
     // amount of blurring applied to depth map of sharp reference frame
     double sigma;
+    // if user want to input an exact initial pose
+    bool exact_initial_pose;
+    // solved pose from previous run at lower scale
+    CPose3DQuat solved_pose_lower_scale;
 
     ExecutionParametrization() : execution_results(nullptr), cam_index(0), ref_img_index(1), blurred_img_index(2),
                                  n_images(5), snapshot_path(), snap_only_final(true), sigma(0) {}  // default
@@ -165,8 +169,14 @@ class ExecutionParametrization {
 
         }
 
-        // calculate pose where solver should start in the first iteration
-        CPose3DQuat initial_pose = blurred_exact_pose + initial_offset;
+        if (exact_initial_pose != true) {
+            // calculate pose where solver should start in the first iteration
+            CPose3DQuat initial_pose = blurred_exact_pose + initial_offset;
+        }
+        else {
+            // solved pose from previous run at lower scale
+            CPose3DQuat initial_pose = solved_pose_lower_scale;
+        }
 
         // setup pipeline with reprojector, blurrer and solver
         posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose, image_scale);

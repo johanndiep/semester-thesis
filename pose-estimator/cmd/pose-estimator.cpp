@@ -82,7 +82,7 @@ class Randomizer {
 
 int main(int argc, char *argv[]) {
     // minimal arguments check
-    if (argc < 10) {
+    if (argc < 10 || argc > 17) {
         std::cerr << "pose-estimator tries to find the position where a blurred image was taken from." << std::endl;
         std::cerr << "It reads ground truth data from a dataset, adds a random pose offset of given" << std::endl;
         std::cerr << "length and starts the algorithm. After convergence it calculates the remaining" << std::endl;
@@ -103,10 +103,23 @@ int main(int argc, char *argv[]) {
     params.ref_img_index = atoi(argv[3]);
     params.blurred_img_index = atoi(argv[4]);
     params.n_images = atoi(argv[5]);
-    const double initial_offset_pos = atof(argv[6]);
-    const double initial_offset_rot = atof(argv[7]);
+    if (argc == 10) {
+        const double initial_offset_pos = atof(argv[6]);
+        const double initial_offset_rot = atof(argv[7]);
+    }
     params.sigma = atof(argv[8]);
     const std::string output_file(argv[9]);
+    params.exact_initial_pose = false;
+    if (argc == 17) {
+        params.exact_initial_pose = true;
+        params.solved_pose_lower_scale.m_coords[0] = atof(argv[10]);
+        params.solved_pose_lower_scale.m_coords[1] = atof(argv[11]);
+        params.solved_pose_lower_scale.m_coords[2] = atof(argv[12]);
+        params.solved_pose_lower_scale.m_quat[0] = atof(argv[13]);
+        params.solved_pose_lower_scale.m_quat[1] = atof(argv[14]);
+        params.solved_pose_lower_scale.m_quat[2] = atof(argv[15]);
+        params.solved_pose_lower_scale.m_quat[3] = atof(argv[16]);
+    }
 
     // Uncomment the following lines in order to generate a snapshot image after each solving iteration
     // params.snapshot_path = output_file + ".png";
@@ -120,19 +133,24 @@ int main(int argc, char *argv[]) {
     cout << "     ref_img_index: " << params.ref_img_index << endl;
     cout << " blurred_img_index: " << params.blurred_img_index << endl;
     cout << "          n_images: " << params.n_images << endl;
-    cout << "initial_offset_pos: " << initial_offset_pos << endl;
-    cout << "initial_offset_rot: " << initial_offset_rot << endl;
+    if (argc < 10) {
+        cout << "initial_offset_pos: " << initial_offset_pos << endl;
+        cout << "initial_offset_rot: " << initial_offset_rot << endl;
+    }
+    else {
+        cout << "initial_offset_pos: " << "ignored" << endl;
+        cout << "initial_offset_rot: " << "ignored" << endl;
+    }
     cout << "       output_file: " << output_file << endl;
     cout << "             sigma: " << params.sigma << endl;
-
     if (argc > 10) {
-        cout << "initial_pose_x: " << argv[10] << endl;
-        cout << "initial_pose_y: " << argv[11] << endl;
-        cout << "initial_pose_z: " << argv[12] << endl;
-        cout << "initial_pose_qw: " << argv[13] << endl;
-        cout << "initial_pose_qx: " << argv[14] << endl;
-        cout << "initial_pose_qy: " << argv[15] << endl;
-        cout << "initial_pose_qz: " << argv[16] << endl;
+        cout << "    initial_pose_x: " << argv[10] << endl;
+        cout << "    initial_pose_y: " << argv[11] << endl;
+        cout << "    initial_pose_z: " << argv[12] << endl;
+        cout << "   initial_pose_qw: " << argv[13] << endl;
+        cout << "   initial_pose_qx: " << argv[14] << endl;
+        cout << "   initial_pose_qy: " << argv[15] << endl;
+        cout << "   initial_pose_qz: " << argv[16] << endl;
     }
 
     // google logging is used by ceres and needs to be initialized only once
