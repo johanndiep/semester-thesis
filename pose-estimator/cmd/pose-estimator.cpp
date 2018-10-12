@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     cout << "     ref_img_index: " << params.ref_img_index << endl;
     cout << " blurred_img_index: " << params.blurred_img_index << endl;
     cout << "          n_images: " << params.n_images << endl;
-    if (argc < 10) {
+    if (argc == 10) {
         cout << "initial_offset_pos: " << initial_offset_pos << endl;
         cout << "initial_offset_rot: " << initial_offset_rot << endl;
     }
