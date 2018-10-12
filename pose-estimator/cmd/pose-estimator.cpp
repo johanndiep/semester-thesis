@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     const CQuaternionDouble &err_rot = results->get_rotation_error();
 
     // get solved pose
-    const CArrayDouble<3> &solved_pose = results->get_solved_pose();
+    const CPose3DQuat &solved_pose = results->get_solved_pose();
 
     // write results to output file
     std::ofstream file;
