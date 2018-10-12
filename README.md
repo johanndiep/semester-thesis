@@ -179,3 +179,15 @@ Results
 
 `0,1,2,0,0.0209076,0.00086078,0.0454107,1,0,0,0,0.05,0,20,-0.0209481,-0.000844381,
 -0.0454147,1,-1.54397e-05,1.99997e-06,3.34618e-05,0.0500203,7.38127e-05,16,10.8831,1`
+
+* scale 1 (ground truth: -0.821577 1.31002 0.911207 0.951512 0.0225991 0.0716038 -0.298306)
+
+`cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.043773,0.0191741,-0.0147065,1,0,0,0, initial_offset_dist: 0.05, initial_offset_rot_angle: 0, n_images: 20, err: -0.0558453,0.0571309,0.0125707,0.999419,-0.031711,-0.00020714,0.0125264, solved_pose: -0.858742,1.26958,0.970572,0.305682,-0.34962,0.648962,-0.602639, err_dist: 0.0808743, err_rot_angle: 0.0682054, num_iterations: 24, total_time: 611.671, convergence: 1`
+
+* sequential scale 4 -> 2 -> 1
+
+`cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.0485365,0.0117561,-0.00244991,1,0,0,-0, initial_offset_dist: 0.05, initial_offset_rot_angle: 0, n_images: 20, err: -0.0922032,-0.00303057,-0.0224219,0.999494,-0.0228472,-0.00212972,0.0220155, solved_pose: -0.856132,1.2216,0.909906,0.295818,-0.35759,0.651383,-0.600268, err_dist: 0.0949387, err_rot_angle: 0.0636098, num_iterations: 38, total_time: 49.7805, convergence: 1`
+
+`cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.0328039,0.0216427,0.0309111,1,0,0,-0, initial_offset_dist: 0.05, initial_offset_rot_angle: 0, n_images: 20, err: -0.0253902,-0.00341289,-0.0266993,0.999983,-0.0048051,0.00198077,0.00274948, solved_pose: -0.814612,1.27436,0.9042,0.303525,-0.35264,0.667659,-0.581162, err_dist: 0.0370022, err_rot_angle: 0.0117597, num_iterations: 23, total_time: 82.1145, convergence: 1`
+
+`cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.0202408,0.0136225,-0.0436433,1,0,0,-0, initial_offset_dist: 0.05, initial_offset_rot_angle: 0, n_images: 20, err: -0.0654652,0.0568786,0.0145086,0.999219,-0.0347688,0.000842579,0.0187704, solved_pose: -0.865533,1.26343,0.971442,0.303793,-0.353428,0.644551,-0.606096, err_dist: 0.0879282, err_rot_angle: 0.0790626, num_iterations: 22, total_time: 564.212, convergence: 1`
