@@ -90,7 +90,8 @@ int main(int argc, char *argv[]) {
         std::cerr << std::endl;
         std::cerr << "Usage: " << argv[0]
                   << " [dataset_path] [cam_index] [ref_img_index] [blurred_img_index] [n_images] [initial_offset_pos] "
-                     "[initial_offset_rot] [sigma] [output_file]"
+                     "[initial_offset_rot] [sigma] [output_file] [opt: initial_pose_x] [opt: initial_pose_y] [opt: initial_pose_z] "
+                     "[opt: initial_pose_qw] [opt: initial_pose_qx] [opt: initial_pose_qy] [opt: initial_pose_qz]"
                   << endl;
         return 1;
     }
@@ -123,6 +124,16 @@ int main(int argc, char *argv[]) {
     cout << "initial_offset_rot: " << initial_offset_rot << endl;
     cout << "       output_file: " << output_file << endl;
     cout << "             sigma: " << params.sigma << endl;
+
+    if (argc > 10) {
+        cout << "initial_pose_x: " << argv[10] << endl;
+        cout << "initial_pose_y: " << argv[11] << endl;
+        cout << "initial_pose_z: " << argv[12] << endl;
+        cout << "initial_pose_qw: " << argv[13] << endl;
+        cout << "initial_pose_qx: " << argv[14] << endl;
+        cout << "initial_pose_qy: " << argv[15] << endl;
+        cout << "initial_pose_qz: " << argv[16] << endl;
+    }
 
     // google logging is used by ceres and needs to be initialized only once
     google::InitGoogleLogging("solver");
