@@ -82,7 +82,7 @@ class Randomizer {
 
 int main(int argc, char *argv[]) {
     // minimal arguments check
-    if (argc != 10 || argc != 17) {
+    if (argc < 10) {
         std::cerr << "pose-estimator tries to find the position where a blurred image was taken from." << std::endl;
         std::cerr << "It reads ground truth data from a dataset, adds a random pose offset of given" << std::endl;
         std::cerr << "length and starts the algorithm. After convergence it calculates the remaining" << std::endl;
