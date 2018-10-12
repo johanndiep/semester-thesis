@@ -103,10 +103,8 @@ int main(int argc, char *argv[]) {
     params.ref_img_index = atoi(argv[3]);
     params.blurred_img_index = atoi(argv[4]);
     params.n_images = atoi(argv[5]);
-    if (argc == 10) {
-        const double initial_offset_pos = atof(argv[6]);
-        const double initial_offset_rot = atof(argv[7]);
-    }
+    const double initial_offset_pos = atof(argv[6]);
+    const double initial_offset_rot = atof(argv[7]);
     params.sigma = atof(argv[8]);
     const std::string output_file(argv[9]);
     params.exact_initial_pose = false;
