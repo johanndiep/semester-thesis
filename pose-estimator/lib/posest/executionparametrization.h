@@ -169,11 +169,10 @@ class ExecutionParametrization {
 
         }
 
-        if (exact_initial_pose != true) {
-            // calculate pose where solver should start in the first iteration
-            CPose3DQuat initial_pose = blurred_exact_pose + initial_offset;
-        }
-        else {
+        // calculate pose where solver should start in the first iteration
+        CPose3DQuat initial_pose = blurred_exact_pose + initial_offset;
+
+        if (exact_initial_pose == true) {
             // solved pose from previous run at lower scale
             CPose3DQuat initial_pose = solved_pose_lower_scale;
         }
