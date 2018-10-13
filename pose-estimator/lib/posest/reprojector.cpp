@@ -32,11 +32,11 @@ ReprojectorImpl::ReprojectorImpl(const posest::InternalCalibration &ic,
             // coordinates in camera frame
             double z_file = ref_depth(pix_y, pix_x);  // in meters (the hypothenuse)
             double cam_z = z_file / std::sqrt(
-                    ((static_cast<double>(pix_x) - (ic.cx/image_scale) / ic.fx/image_scale) * ((static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx/image_scale) +
-                    ((static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy/image_scale) * ((static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy/image_scale)
+                    ((static_cast<double>(pix_x) - (ic.cx/1) / ic.fx/1) * ((static_cast<double>(pix_x) - (ic.cx/1)) / ic.fx/1) +
+                    ((static_cast<double>(pix_y) - (ic.cy/1)) / ic.fy/1) * ((static_cast<double>(pix_y) - (ic.cy/1)) / ic.fy/1)
                     + 1));
-            double cam_x = cam_z * (static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx/image_scale;
-            double cam_y = cam_z * (static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy/image_scale;
+            double cam_x = cam_z * (static_cast<double>(pix_x) - (ic.cx/1)) / ic.fx/1;
+            double cam_y = cam_z * (static_cast<double>(pix_y) - (ic.cy/1)) / ic.fy/1;
             const mrpt::poses::CPoint3D cam_p(cam_x, cam_y, cam_z);
 
             // calculate coordinates in world frame and store in array
@@ -93,9 +93,9 @@ void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoi
         mrpt::poses::CPoint3D cam_p = world_p - reproj_pose;
 
         const auto pix_x =
-                static_cast<float>(cam_p.x() * internal_calibration.fx / (cam_p.z() * image_scale) + (internal_calibration.cx/image_scale));
+                static_cast<float>(cam_p.x() * internal_calibration.fx / (cam_p.z() * 1) + (internal_calibration.cx/1));
         const auto pix_y =
-                static_cast<float>(cam_p.y() * internal_calibration.fy / (cam_p.z() * image_scale) + (internal_calibration.cy/image_scale));
+                static_cast<float>(cam_p.y() * internal_calibration.fy / (cam_p.z() * 1) + (internal_calibration.cy/1));
 
         pixel_coords.emplace_back(pix_x, pix_y, cam_p.z());
     }
