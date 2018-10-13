@@ -193,3 +193,6 @@ Results
 `cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.0202408,0.0136225,-0.0436433,1,0,0,-0, initial_offset_dist: 0.05, initial_offset_rot_angle: 0, n_images: 20, err: -0.0654652,0.0568786,0.0145086,0.999219,-0.0347688,0.000842579,0.0187704, solved_pose: -0.865533,1.26343,0.971442,0.303793,-0.353428,0.644551,-0.606096, err_dist: 0.0879282, err_rot_angle: 0.0790626, num_iterations: 22, total_time: 564.212, convergence: 1`
 
 !!SO FAR WRONG FOCAL LENGTH, WRONG RESULTS FOR DOWNSCALE TESTS!!
+
+* changes: downscale by 2
+
