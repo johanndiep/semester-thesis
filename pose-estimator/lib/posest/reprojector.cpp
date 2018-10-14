@@ -32,9 +32,9 @@ ReprojectorImpl::ReprojectorImpl(const posest::InternalCalibration &ic,
             // coordinates in camera frame
             double z_file = ref_depth(pix_y, pix_x);  // in meters (the hypothenuse)
             double cam_z = z_file / std::sqrt(
-                    ((static_cast<double>(pix_x) - (ic.cx/image_scale) / ic.fx/image_scale) * ((static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx/image_scale) +
+                    ((static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx/image_scale) * ((static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx/image_scale) +
                     ((static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy/image_scale) * ((static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy/image_scale)
-                    + 1));
+                    + 1);
             double cam_x = cam_z * (static_cast<double>(pix_x) - (ic.cx/image_scale)) / ic.fx/image_scale;
             double cam_y = cam_z * (static_cast<double>(pix_y) - (ic.cy/image_scale)) / ic.fy/image_scale;
             const mrpt::poses::CPoint3D cam_p(cam_x, cam_y, cam_z);

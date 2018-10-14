@@ -110,6 +110,7 @@ class Dataset {
      * Read a depth map for image img_index taken by camera cam_index
      * @param img_index usually it starts from 1 (and not 0)
      * @param cam_index use camera getCameras()[cam_index]
+     * @return
      */
     cv::Mat_<double> readDepthImage(int img_index, int cam_index) const;
 

@@ -51,7 +51,7 @@ int main(int argc, char *args[]) {
     for (auto p : points3D) {
         int grey = *(it++);
         points3D_file << p.x() << ";" << p.y() << ";" << p.z() << ";"
-        << grey << ";" << grey << ";" << grey << std::endl;
+                      << grey << ";" << grey << ";" << grey << std::endl;
     }
     points3D_file.close();
 

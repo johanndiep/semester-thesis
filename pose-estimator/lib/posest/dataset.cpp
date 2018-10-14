@@ -173,7 +173,7 @@ void posest::Dataset::readImageLogs() {
         } else if (img_type_str == "rgb") {
             log_entry.img_type = rgb;
         } else {
-            throw std::runtime_error("unknown image type readcam_index in imageLogs.txt file");
+            throw std::runtime_error("unknown image type read in imageLogs.txt file");
         }
         this->image_log.push_back(log_entry);
     }
