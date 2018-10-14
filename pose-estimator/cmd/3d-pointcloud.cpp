@@ -25,21 +25,27 @@ int main(int argc, char *args[]) {
     const int cam_index = atoi(args[2]);
     const int img_index = atoi(args[3]);
     const double sigma = atof(args[4]);
-    const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(img_index, cam_index);
+    //const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(img_index, cam_index);
+    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(img_index, cam_index, 2); 
 
     cv::Mat_<double> depth_map;
     if (sigma == 0) {
         depth_map = dataset.readDepthImage(img_index, cam_index);
+        depth_map = dataset.readScaledDepthImage(depth_map, 2);
+
     } else {
         depth_map = dataset.readDepthImage(img_index, cam_index, sigma);
+        depth_map = dataset.readScaledDepthImage(depth_map, 2);
     }
+
 
     // setup reprojector
     posest::ReprojectorImpl reprojector(
             dataset.getInternalCalibration(cam_index),
             ref_img,
             depth_map,
-            dataset.getPose(img_index, cam_index));
+            dataset.getPose(img_index, cam_index),
+            2);
 
     // get the 3D point cloud
     auto points3D = reprojector.getPoints3D();
