@@ -29,7 +29,8 @@ int main(int argc, char *args[]) {
     const double sigma = atof(args[5]);
     const std::string reproj_img_path(args[6]);
     //const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(ref_img_index, cam_index);
-    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(ref_img_index, cam_index, 2); 
+    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(ref_img_index, cam_index, 2);
+    cv::imwrite("scaled.png", ref_img);
 
     cv::Mat_<double> depth_map;
     if (sigma == 0) {
