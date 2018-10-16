@@ -146,10 +146,9 @@ class ExecutionParametrization {
      * @param dataset
      * @return
      */
-    const ExecutionResults *posest_start(const Dataset &dataset) {
+    const ExecutionResults *posest_start(const Dataset &dataset, const double image_scale = 1) {
         if (execution_results != nullptr) delete (execution_results);
         // read information from dataset
-        const double image_scale = 1; // set this parameter to 1 if ctp should be deactivated
         //const Mat_<uchar> &ref_sharp = dataset.readSharpImage(ref_img_index, cam_index);
         const Mat_<uchar> &ref_sharp = dataset.readSharpScaledImage(ref_img_index, cam_index, image_scale);
         const CPose3DQuat &ref_pose = dataset.getPose(ref_img_index, cam_index);
