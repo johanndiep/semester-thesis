@@ -46,7 +46,7 @@ int main(int argc, char *args[]) {
             dataset.getInternalCalibration(cam_index),
             ref_img,
             depth_map,
-            ref_pose);
+            ref_pose, 2);
 
     // setup blurrer
     posest::BlurrerImpl blurrer(ref_pose,
