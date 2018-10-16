@@ -82,7 +82,7 @@ class Randomizer {
 
 int main(int argc, char *argv[]) {
     // minimal arguments check
-    if (argc < 10 || argc > 18) {
+    if (argc < 11 || argc > 18) {
         std::cerr << "pose-estimator tries to find the position where a blurred image was taken from." << std::endl;
         std::cerr << "It reads ground truth data from a dataset, adds a random pose offset of given" << std::endl;
         std::cerr << "length and starts the algorithm. After convergence it calculates the remaining" << std::endl;
@@ -90,8 +90,8 @@ int main(int argc, char *argv[]) {
         std::cerr << std::endl;
         std::cerr << "Usage: " << argv[0]
                   << " [dataset_path] [cam_index] [ref_img_index] [blurred_img_index] [n_images] [initial_offset_pos] "
-                     "[initial_offset_rot] [sigma] [output_file] [opt: initial_pose_x] [opt: initial_pose_y] [opt: initial_pose_z] "
-                     "[opt: initial_pose_qw] [opt: initial_pose_qx] [opt: initial_pose_qy] [opt: initial_pose_qz] [image_scale]"
+                     "[initial_offset_rot] [sigma] [output_file] [image_scale] [opt: initial_pose_x] [opt: initial_pose_y] [opt: initial_pose_z] "
+                     "[opt: initial_pose_qw] [opt: initial_pose_qx] [opt: initial_pose_qy] [opt: initial_pose_qz]"
                   << endl;
         return 1;
     }
@@ -108,17 +108,16 @@ int main(int argc, char *argv[]) {
     params.sigma = atof(argv[8]);
     const std::string output_file(argv[9]);
     params.exact_initial_pose = false;
-    double image_scale = 1;
+    double image_scale = atof(argv[10]);
     if (argc == 18) {
         params.exact_initial_pose = true;
-        params.solved_pose_lower_scale.m_coords[0] = atof(argv[10]);
-        params.solved_pose_lower_scale.m_coords[1] = atof(argv[11]);
-        params.solved_pose_lower_scale.m_coords[2] = atof(argv[12]);
-        params.solved_pose_lower_scale.m_quat[0] = atof(argv[13]);
-        params.solved_pose_lower_scale.m_quat[1] = atof(argv[14]);
-        params.solved_pose_lower_scale.m_quat[2] = atof(argv[15]);
-        params.solved_pose_lower_scale.m_quat[3] = atof(argv[16]);
-        image_scale = atof(argv[17]);
+        params.solved_pose_lower_scale.m_coords[0] = atof(argv[11]);
+        params.solved_pose_lower_scale.m_coords[1] = atof(argv[12]);
+        params.solved_pose_lower_scale.m_coords[2] = atof(argv[13]);
+        params.solved_pose_lower_scale.m_quat[0] = atof(argv[14]);
+        params.solved_pose_lower_scale.m_quat[1] = atof(argv[15]);
+        params.solved_pose_lower_scale.m_quat[2] = atof(argv[16]);
+        params.solved_pose_lower_scale.m_quat[3] = atof(argv[17]);
     }
 
     // Uncomment the following lines in order to generate a snapshot image after each solving iteration
