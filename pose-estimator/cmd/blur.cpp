@@ -29,7 +29,7 @@ int main(int argc, char *args[]) {
     const double sigma = atof(args[6]);
     const std::string blur_img_path(args[7]);
     //const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(ref_img_index, cam_index);
-    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(img_index, cam_index, 2); 
+    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(ref_img_index, cam_index, 2); 
     const mrpt::poses::CPose3DQuat &ref_pose = dataset.getPose(ref_img_index, cam_index);
 
     cv::Mat_<double> depth_map;
