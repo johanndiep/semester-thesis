@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     cout << "     ref_img_index: " << params.ref_img_index << endl;
     cout << " blurred_img_index: " << params.blurred_img_index << endl;
     cout << "          n_images: " << params.n_images << endl;
-    if (argc == 10) {
+    if (argc == 11) {
         cout << "initial_offset_pos: " << initial_offset_pos << endl;
         cout << "initial_offset_rot: " << initial_offset_rot << endl;
     }
@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     }
     cout << "       output_file: " << output_file << endl;
     cout << "             sigma: " << params.sigma << endl;
-    if (argc > 10) {
+    if (argc > 11) {
         cout << "    initial_pose_x: " << argv[10] << endl;
         cout << "    initial_pose_y: " << argv[11] << endl;
         cout << "    initial_pose_z: " << argv[12] << endl;
