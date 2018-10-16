@@ -46,7 +46,7 @@ docker ps -a
 
 ### Copy file to host machine
 ```bash
-docker cp cocky_vaughan:/home/semester-thesis/file /home/johann
+docker cp container_name:/home/semester-thesis/file /home/johann
 ```
 
 ### After running bash
@@ -54,6 +54,12 @@ docker cp cocky_vaughan:/home/semester-thesis/file /home/johann
 apt-get install libmrpt-dev
 git clone https://gitlab.com/jdiep/semester-thesis -b 1-coarse-to-fine-implementation
 ```
+### Run multiple terminal of same container
+```bash
+
+docker exec -it container_name bash
+```
+
 
 Hyperparameters chosen so far
 ------------
