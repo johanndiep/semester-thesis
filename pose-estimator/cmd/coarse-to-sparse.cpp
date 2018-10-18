@@ -178,7 +178,8 @@ int main(int argc, char *argv[]) {
     file << "err_rot_angle: " << results->get_angular_error() << ", ";              // err_rot_angle
     file << "num_iterations: " << results->get_num_iterations() << ", ";            // num_iterations
     file << "total_time: " << results->get_total_time() << ", ";                    // total_time
-    file << "convergence: " << results->has_converged();                            // convergence
+    file << "convergence: " << results->has_converged()<< ", ";                     // convergence
+    file << "image_scale: " << pyramid;												// image_scale
     file << endl;
 
     for (int i = 0, i < pyramid_height, i++) {
@@ -186,4 +187,11 @@ int main(int argc, char *argv[]) {
     std::cout << "Hello" << endl;
 
     }
+
+    // print summary
+    cout << "-------------------------------------------------------------" << endl;
+    cout << " finished solving for ref_img: "
+         << params.ref_img_index
+         << ", blurred_img: " << params.blurred_img_index << endl;
+    cout << "=============================================================" << endl;
 }
