@@ -146,6 +146,7 @@ int main(int argc, char *argv[]) {
     // write results to output file
     std::ofstream file;
     file.open(output_file + std::string(".txt"));
+    file << "Layer: " << pyramid_height << endl;
     file << "cam_index: " << params.cam_index << ", ";                              // cam_index
     file << "ref_img_index: " << params.ref_img_index << ", ";                      // ref_img_index
     file << "blurred_img_index: " << params.blurred_img_index << ", ";              // blurred_img_index
@@ -179,13 +180,61 @@ int main(int argc, char *argv[]) {
     file << "num_iterations: " << results->get_num_iterations() << ", ";            // num_iterations
     file << "total_time: " << results->get_total_time() << ", ";                    // total_time
     file << "convergence: " << results->has_converged()<< ", ";                     // convergence
-    file << "image_scale: " << pyramid;												// image_scale
+    file << "image_scale: " << pyramid_height;										// image_scale
     file << endl;
+    file << "=============================================================" << endl;
 
-    for (int i = 0, i < pyramid_height, i++) {
+    for (int i = pyramid_height - 1; i < 1; i--) {
 
-    std::cout << "Hello" << endl;
+	    params.exact_initial_pose = true;
+	    params.solved_pose_lower_scale.m_coords[0] = solved_pose.m_coords[0];
+	    params.solved_pose_lower_scale.m_coords[1] = solved_pose.m_coords[1];
+	    params.solved_pose_lower_scale.m_coords[2] = solved_pose.m_coords[2];
+	    params.solved_pose_lower_scale.m_quat[0] = solved_pose.m_quat[0];
+	    params.solved_pose_lower_scale.m_quat[1] = solved_pose.m_quat[1];
+	    params.solved_pose_lower_scale.m_quat[2] = solved_pose.m_quat[2];
+	    params.solved_pose_lower_scale.m_quat[3] = solved_pose.m_quat[3];
 
+	    // start the solving process
+	    results = params.posest_start(dataset, i);
+
+	    // get error after convergence with respect to ground truth
+	    err_pos = results->get_position_error();
+	    err_rot = results->get_rotation_error();
+
+	    // get solved pose
+	    solved_pose = results->get_solved_pose();
+
+	    file << "Layer: " << i << endl;
+	   	file << "initial_pose: " << solved_pose.m_coords[0] << ",";						// initial_pose_x
+	   	file << solved_pose.m_coords[1] << ",";											// initial_pose_y
+	   	file << solved_pose.m_coords[2] << ",";											// initial_pose_z
+	   	file << solved_pose.m_quat[0] << ",";											// initial_pose_qw
+	   	file << solved_pose.m_quat[1] << ",";											// initial_pose_qx
+	   	file << solved_pose.m_quat[2] << ",";											// initial_pose_qy
+	   	file << solved_pose.m_quat[3] << ", ";											// initial_pose_qz
+    	file << "err: " << err_pos[0] << ",";                                           // err_x
+   	 	file << err_pos[1] << ",";                                                      // err_y
+    	file << err_pos[2] << ",";                                                      // err_z
+    	file << err_rot[0] << ",";                                                      // err_qw
+   		file << err_rot[1] << ",";                                                      // err_qx
+    	file << err_rot[2] << ",";                                                      // err_qy
+    	file << err_rot[3] << ", ";                                                     // err_qz
+    	file << "solved_pose: " << solved_pose.m_coords[0] << ",";                      // solved_pose_x
+   		file << solved_pose.m_coords[1] << ",";                                         // solved_pose_y
+    	file << solved_pose.m_coords[2] << ",";                                         // solved_pose_z
+   		file << solved_pose.m_quat[0] << ",";                                           // solved_pose_qw
+    	file << solved_pose.m_quat[1] << ",";                                           // solved_pose_qx
+    	file << solved_pose.m_quat[2] << ",";                                           // solved_pose_qy
+    	file << solved_pose.m_quat[3] << ", ";                                          // solved_pose_qz
+        file << "err_dist: " << results->get_distance_error() << ", ";                  // err_dist
+    	file << "err_rot_angle: " << results->get_angular_error() << ", ";              // err_rot_angle
+    	file << "num_iterations: " << results->get_num_iterations() << ", ";            // num_iterations
+    	file << "total_time: " << results->get_total_time() << ", ";                    // total_time
+    	file << "convergence: " << results->has_converged()<< ", ";                     // convergence
+    	file << "image_scale: " << i;										// image_scale
+    	file << endl;
+    	file << "=============================================================" << endl
     }
 
     // print summary
