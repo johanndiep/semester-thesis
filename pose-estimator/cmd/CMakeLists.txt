@@ -15,5 +15,5 @@ add_executable(blur blur.cpp)
 target_link_libraries(blur posest)
 
 # main executable for pyramid style 
-add_exectuable(coarse-to-sparse coarse-to-sparse.cpp)
+add_executable(coarse-to-sparse coarse-to-sparse.cpp)
 target_link_libraries(coarse-to-sparse posest)

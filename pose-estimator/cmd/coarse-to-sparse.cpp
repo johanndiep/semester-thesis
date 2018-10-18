@@ -83,12 +83,30 @@ class Randomizer {
 int main(int argc, char *argv[]) {
 	// minimal arguments check
 	if (argc < 11) {
-		std::cer << "coarse-to-sparse tries to find the position where a blurred image was taken from." << std::endl;
-		std::cer << "The steps are equal as in pose-estimation, with the difference that it uses pyramid scale resolution" << std::endl;
-		std::cer << "and uses previous results as initiliation for the current iteration. After a number of pyramid steps and convergence," << std::endl;
-		std::cer << "it calculates the remaining error and writes the result to a file." << std::endl;
+		std::cerr << "coarse-to-sparse tries to find the position where a blurred image was taken from." << std::endl;
+		std::cerr << "The steps are equal as in pose-estimation, with the difference that it uses pyramid scale resolution" << std::endl;
+		std::cerr << "and uses previous results as initiliation for the current iteration. After a number of pyramid steps" << std::endl;
+		std::cerr << "and convergence, it calculates the remaining error and writes the result to a file." << std::endl;
 		std::cerr << std::endl;
+		std::cerr << "Usage: " << argv[0]
+				  << " [dataset_path] [cam_index] [ref_img_index] [blurred_img_index] [n_images] [initial_offset_pos] "
+                     "[initial_offset_rot] [sigma] [output_file] [pyramid height]"
+                  << endl;
 		return 1;
 	}
 
+	// parse command line arguments
+	posest::ExecutionParametrization params;
+	const std::string dataset_path(argv[1]);
+	params.cam_index = atoi(argv[2]);
+	params.ref_img_index = atoi(argv[3]);
+    params.blurred_img_index = atoi(argv[4]);
+    params.n_images = atoi(argv[5]);
+    const double initial_offset_pos = atof(argv[6]);
+    const double initial_offset_rot = atof(argv[7]);
+    params.sigma = atof(argv[8]);
+    const std::string output_file(argv[9]);
+    const int pyramid_height = atoi(argv[10]);
+
+    // print out parameterization
 }
