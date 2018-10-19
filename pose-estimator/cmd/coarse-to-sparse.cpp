@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     params.initial_offset = CPose3DQuat(rnd.rand_pose_offset(initial_offset_pos, initial_offset_rot));
 
     // start the solving process
-    const posest::ExecutionResults *results = params.posest_start(dataset, pyramid_height);
+    cposest::ExecutionResults *results = params.posest_start(dataset, pyramid_height);
 
     // get error after convergence with respect to ground truth
     const CArrayDouble<3> &err_pos = results->get_position_error();
