@@ -287,3 +287,6 @@ Results
 
 `cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.138542,0.0486388,0.0306645,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00749608,-0.00316906,-0.00853151,0.999994,-0.00210821,0.0026432,0.000157313, solved_pose: -0.819247,1.29932,0.906824,0.304525,-0.3521,0.669935,-0.578341, err_dist: 0.0117907, err_rot_angle: 0.0067693, num_iterations: 43, total_time: 68.388, convergence: 1`
 
+
+
+

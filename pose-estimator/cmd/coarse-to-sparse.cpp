@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     params.initial_offset = CPose3DQuat(rnd.rand_pose_offset(initial_offset_pos, initial_offset_rot));
 
     // start the solving process
-    cposest::ExecutionResults *results = params.posest_start(dataset, pyramid_height);
+    const posest::ExecutionResults *results = params.posest_start(dataset, pyramid_height);
 
     // get error after convergence with respect to ground truth
     const CArrayDouble<3> &err_pos = results->get_position_error();
@@ -184,35 +184,43 @@ int main(int argc, char *argv[]) {
     file << endl;
     file << "=============================================================" << endl;
 
-    for (int i = pyramid_height - 1; i < 1; i--) {
+    double solved_pose_x = solved_pose.m_coords[0];
+    double solved_pose_y = solved_pose.m_coords[1];
+    double solved_pose_z = solved_pose.m_coords[2];
+    double solved_pose_qw = solved_pose.m_quat[0];
+    double solved_pose_qx = solved_pose.m_quat[1];
+    double solved_pose_qy = solved_pose.m_quat[2];
+    double solved_pose_qz = solved_pose.m_quat[3];
+
+    for (int i = pyramid_height - 1; i > 0; i--) {
 
 	    params.exact_initial_pose = true;
-	    params.solved_pose_lower_scale.m_coords[0] = solved_pose.m_coords[0];
-	    params.solved_pose_lower_scale.m_coords[1] = solved_pose.m_coords[1];
-	    params.solved_pose_lower_scale.m_coords[2] = solved_pose.m_coords[2];
-	    params.solved_pose_lower_scale.m_quat[0] = solved_pose.m_quat[0];
-	    params.solved_pose_lower_scale.m_quat[1] = solved_pose.m_quat[1];
-	    params.solved_pose_lower_scale.m_quat[2] = solved_pose.m_quat[2];
-	    params.solved_pose_lower_scale.m_quat[3] = solved_pose.m_quat[3];
+	    params.solved_pose_lower_scale.m_coords[0] = solved_pose_x;
+	    params.solved_pose_lower_scale.m_coords[1] = solved_pose_y;
+	    params.solved_pose_lower_scale.m_coords[2] = solved_pose_z;
+	    params.solved_pose_lower_scale.m_quat[0] = solved_pose_qw;
+	    params.solved_pose_lower_scale.m_quat[1] = solved_pose_qx;
+	    params.solved_pose_lower_scale.m_quat[2] = solved_pose_qy;
+	    params.solved_pose_lower_scale.m_quat[3] = solved_pose_qz;
 
 	    // start the solving process
-	    results = params.posest_start(dataset, i);
+	    const posest::ExecutionResults *results = params.posest_start(dataset, i);
 
 	    // get error after convergence with respect to ground truth
-	    err_pos = results->get_position_error();
-	    err_rot = results->get_rotation_error();
+	    const CArrayDouble<3> &err_pos = results->get_position_error();
+	    const CQuaternionDouble &err_rot = results->get_rotation_error();
 
 	    // get solved pose
-	    solved_pose = results->get_solved_pose();
+	    const CPose3DQuat &solved_pose = results->get_solved_pose();
 
 	    file << "Layer: " << i << endl;
-	   	file << "initial_pose: " << solved_pose.m_coords[0] << ",";						// initial_pose_x
-	   	file << solved_pose.m_coords[1] << ",";											// initial_pose_y
-	   	file << solved_pose.m_coords[2] << ",";											// initial_pose_z
-	   	file << solved_pose.m_quat[0] << ",";											// initial_pose_qw
-	   	file << solved_pose.m_quat[1] << ",";											// initial_pose_qx
-	   	file << solved_pose.m_quat[2] << ",";											// initial_pose_qy
-	   	file << solved_pose.m_quat[3] << ", ";											// initial_pose_qz
+	   	file << "initial_pose: " << params.solved_pose_lower_scale.m_coords[0] << ",";	// initial_pose_x
+	   	file << params.solved_pose_lower_scale.m_coords[1] << ",";						// initial_pose_y
+	   	file << params.solved_pose_lower_scale.m_coords[2] << ",";						// initial_pose_z
+	   	file << params.solved_pose_lower_scale.m_quat[0] << ",";						// initial_pose_qw
+	   	file << params.solved_pose_lower_scale.m_quat[1] << ",";						// initial_pose_qx
+	   	file << params.solved_pose_lower_scale.m_quat[2] << ",";						// initial_pose_qy
+	   	file << params.solved_pose_lower_scale.m_quat[3] << ", ";						// initial_pose_qz
     	file << "err: " << err_pos[0] << ",";                                           // err_x
    	 	file << err_pos[1] << ",";                                                      // err_y
     	file << err_pos[2] << ",";                                                      // err_z
@@ -234,7 +242,15 @@ int main(int argc, char *argv[]) {
     	file << "convergence: " << results->has_converged()<< ", ";                     // convergence
     	file << "image_scale: " << i;										// image_scale
     	file << endl;
-    	file << "=============================================================" << endl
+    	file << "=============================================================" << endl;
+
+    	solved_pose_x = solved_pose.m_coords[0];
+    	solved_pose_y = solved_pose.m_coords[1];
+    	solved_pose_z = solved_pose.m_coords[2];
+    	solved_pose_qw = solved_pose.m_quat[0];
+    	solved_pose_qx = solved_pose.m_quat[1];
+    	solved_pose_qy = solved_pose.m_quat[2];
+    	solved_pose_qz = solved_pose.m_quat[3];
     }
 
     // print summary
