@@ -1,0 +1,95 @@
+\documentclass{article}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{textcomp}
+
+\begin{document}
+
+\begin{center}
+\begin{tikzpicture}
+
+	\begin{axis}[
+    	title={Final error},
+    	scaled ticks=false,
+    	tick label style={/pgf/number format/fixed},
+    	xlabel={Initialization offset [m]},
+    	ylabel={Final error [m]},
+    	xmin=0, xmax=0.25,
+    	ymin=0, ymax=0.10,
+    	xtick={0,0.05,0.10,0.15,0.20,0.25},
+    	ytick={0,0.02,0.04,0.06,0.08,0.10},
+    	legend pos=north west,
+    	ymajorgrids=true,
+    	grid style=dashed,
+	]
+	\addplot[
+    	color=blue,
+    	mark=square,
+    	]
+    	coordinates {
+    	(0, 0.009612) (0.025,0.0131642) (0.05,0.0121044) (0.075,0.00972202) (0.1,0.01151) (0.125,0.00960064) (0.15,0.00400466) (0.175,0.00996183) (0.2,0.0110269) (0.225,0.00993059)	
+    	(0.25,0.0100231)
+    	};
+ 
+	\addplot[
+    	color=red,
+    	mark=square,
+    	]
+    	coordinates {
+    	(0, 0.0128008) (0.025,0.0189845) (0.05,0.0190408) (0.075,0.0225211) (0.1,0.0204743) (0.125,0.0181519) (0.15,0.0203268) (0.175,0.0194932) (0.2,0.0191816) (0.225,0.0191246)	
+    	(0.25,0.024851)
+    	};
+    	
+	\addlegendentry{Image distance = 1}
+	\addlegendentry{Image distance = 2}
+   	 
+	\end{axis}
+	
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}
+
+	\begin{axis}[
+    	title={Final error with 10 layers},
+    	scaled ticks=false,
+    	tick label style={/pgf/number format/fixed},
+    	xlabel={Initialization offset [m]},
+    	ylabel={Final error [m]},
+    	xmin=0, xmax=0.25,
+    	ymin=0, ymax=0.10,
+    	xtick={0,0.05,0.10,0.15,0.20,0.25},
+    	ytick={0,0.02,0.04,0.06,0.08,0.10},
+    	legend pos=north west,
+    	ymajorgrids=true,
+    	grid style=dashed,
+	]
+	\addplot[
+    	color=blue,
+    	mark=square,
+    	]
+    	coordinates {
+    	(0, 0.009612) (0.025,0.0131692) (0.05,0.0127785) (0.075,0.00361176) (0.1,0.00388815) (0.125,0.00999159) (0.15,0.00956) (0.175,0.0099335) (0.2,0.0111007) (0.225,0.00989972)	
+    	(0.25,0.0110472)
+    	};
+    	
+	\addplot[
+    	color=red,
+    	mark=square,
+    	]
+    	coordinates {
+    	(0, 0.009612) (0.025,0.0131692) (0.05,0.0127785) (0.075,0.00361176) (0.1,0.00388815) (0.125,0.00999159) (0.15,0.00956) (0.175,0.0099335) (0.2,0.0111007) (0.225,0.0143376)	
+    	(0.25,0.02142)
+    	};
+    	
+	\addlegendentry{Image distance = 1}
+	\addlegendentry{Image distance = 2}
+   	 
+	\end{axis}
+	
+\end{tikzpicture}
+\end{center}
+
+\end{document}
