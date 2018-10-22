@@ -143,13 +143,13 @@ int main(int argc, char *argv[]) {
     cout << "       output_file: " << output_file << endl;
     cout << "             sigma: " << params.sigma << endl;
     if (argc > 11) {
-        cout << "    initial_pose_x: " << argv[10] << endl;
-        cout << "    initial_pose_y: " << argv[11] << endl;
-        cout << "    initial_pose_z: " << argv[12] << endl;
-        cout << "   initial_pose_qw: " << argv[13] << endl;
-        cout << "   initial_pose_qx: " << argv[14] << endl;
-        cout << "   initial_pose_qy: " << argv[15] << endl;
-        cout << "   initial_pose_qz: " << argv[16] << endl;
+        cout << "    initial_pose_x: " << argv[11] << endl;
+        cout << "    initial_pose_y: " << argv[12] << endl;
+        cout << "    initial_pose_z: " << argv[13] << endl;
+        cout << "   initial_pose_qw: " << argv[14] << endl;
+        cout << "   initial_pose_qx: " << argv[15] << endl;
+        cout << "   initial_pose_qy: " << argv[16] << endl;
+        cout << "   initial_pose_qz: " << argv[17] << endl;
     }
 
     // google logging is used by ceres and needs to be initialized only once
