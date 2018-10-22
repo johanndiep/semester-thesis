@@ -159,7 +159,8 @@ cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0
 
 * changes: downscale by 2, 0.15 offset
 
-cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.124354,0.0179113,-0.0819465,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00795174,0.0013827,-0.00406823,0.999997,-0.0012102,0.00198302,-4.27345e-05, solved_pose: -0.822611,1.30107,0.911968,0.303882,-0.351856,0.670726,-0.57791, err_dist: 0.00903839, err_rot_angle: 0.00464706, num_iterations: 27, total_time: 201.548, convergence: 1
+cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 
+0,initial_offset: 0.124354,0.0179113,-0.0819465,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00795174,0.0013827,-0.00406823,0.999997,-0.0012102,0.00198302,-4.27345e-05, solved_pose: -0.822611,1.30107,0.911968,0.303882,-0.351856,0.670726,-0.57791, err_dist: 0.00903839, err_rot_angle: 0.00464706, num_iterations: 27, total_time: 201.548, convergence: 1
 
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.0259158,0.0107824,0.14735,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00824088,-0.00028084,-0.00544473,0.999997,-0.00154574,0.00210864,-0.000127924, solved_pose: -0.821853,1.3002,0.910121,0.304133,-0.35177,0.670523,-0.578066, err_dist: 0.0098811, err_rot_angle: 0.00523528, num_iterations: 27, total_time: 201.678, convergence: 1
 
@@ -290,7 +291,8 @@ initial_pose: -0.941328,1.00134,0.919625,0.324445,-0.386076,0.660695,-0.556023, 
 =============================================================
 Layer: 2
 initial_pose: -0.937418,0.999182,0.918747,0.324817,-0.385991,0.660869,-0.55566, err: -0.0225529,0.00427451,-0.00707636,0.999987,-0.00147749,0.00482642,-0.000669728, solved_pose: -0.938076,0.997225,0.915801,0.325492,-0.385907,0.660535,-0.55572, err_dist: 0.0240204, err_rot_angle: 0.0101835, num_iterations: 31, total_time: 57.7476, convergence: 1, image_scale: 2
-=============================================================
+============================================================
+=
 Layer: 1
 initial_pose: -0.938076,0.997225,0.915801,0.325492,-0.38590.0036117607,0.660535,-0.55572, err: -0.020418,0.00801035,-0.00326473,0.99999,-0.000613289,0.0043488,-0.000741242, solved_pose: -0.939758,1.00061,0.920127,0.324884,-0.385872,0.661199,-0.555309, err_dist: 0.0221747, err_rot_angle: 0.00890792, num_iterations: 33, total_time: 277.373, convergence: 1, image_scale: 1
 =============================================================
@@ -473,6 +475,7 @@ initial_pose: -0.821283,1.30622,0.913352,0.302942,-0.35149,0.671022,-0.578283, e
 =============================================================
 
 Layer: 10
+
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.00453496,5.60162e-05,-0.0998971,1,0,0,0, initial_offset_dist: 0.1, initial_offset_rot_angle: 0, n_images: 10, err: 0.017987,0.0124836,0.00515664,0.999995,-0.000582102,-0.00233079,0.0019263, solved_pose: -0.813873,1.32665,0.924242,0.299624,-0.350876,0.671699,-0.579596, err_dist: 0.0224936, err_rot_angle: 0.00615861, num_iterations: 15, total_time: 1.88926, convergence: 1, image_scale: 10
 =============================================================
 Layer: 9
