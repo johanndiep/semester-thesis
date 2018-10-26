@@ -121,8 +121,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Uncomment the following lines in order to generate a snapshot image after each solving iteration
-    // params.snapshot_path = output_file + ".png";
-    // params.snap_only_final = false;
+    params.snapshot_path = output_file + ".png";
+    params.snap_only_final = false;
 
     // print out parametrization
     cout << endl << "=============================================================" << endl;
