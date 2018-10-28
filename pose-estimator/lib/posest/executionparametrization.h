@@ -175,6 +175,8 @@ class ExecutionParametrization {
             initial_pose = solved_pose_lower_scale;
         }
 
+        std::cout << initial_pose << std::endl;
+
         // setup pipeline with reprojector, blurrer and solver
         posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose, image_scale);
         posest::BlurrerImpl blurrer(ref_pose,
