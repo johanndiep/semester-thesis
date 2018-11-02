@@ -53,6 +53,7 @@ docker cp container_name:/home/semester-thesis/file /home/johann
 ```bash
 apt-get install libmrpt-dev
 git clone https://gitlab.com/jdiep/semester-thesis -b 1-coarse-to-fine-implementation
+git clone https://github.com/hiroharu-kato/neural_renderer.git
 ```
 
 ### Run multiple terminal of same container
