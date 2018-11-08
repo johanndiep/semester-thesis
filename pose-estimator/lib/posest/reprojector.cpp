@@ -31,9 +31,9 @@ ReprojectorImpl::ReprojectorImpl(const posest::InternalCalibration &ic,
         for (int pix_x = 0; pix_x < ref_img.cols; pix_x++) {
             // coordinates in camera frame
             double z_file = ref_depth(pix_y, pix_x);  // in meters (the hypothenuse)
-            double scale = 2^(image_scale - 1);
+            double scale = pow(2, (image_scale - 1));
             double cam_z = z_file / std::sqrt(
-                    ((static_cast<double>(pix_x) - (ic.cx/ )) / (ic.fx/scale)) * ((static_cast<double>(pix_x) - (ic.cx/scale)) / (ic.fx/scale)) +
+                    ((static_cast<double>(pix_x) - (ic.cx/scale)) / (ic.fx/scale)) * ((static_cast<double>(pix_x) - (ic.cx/scale)) / (ic.fx/scale)) +
                     ((static_cast<double>(pix_y) - (ic.cy/scale)) / (ic.fy/scale)) * ((static_cast<double>(pix_y) - (ic.cy/scale)) / (ic.fy/scale))
                     + 1);
             double cam_x = cam_z * (static_cast<double>(pix_x) - (ic.cx/scale)) / (ic.fx/scale);
@@ -87,7 +87,7 @@ void ReprojectorImpl::reproject(const CPose3DQuat &reproj_pose, std::vector<TPoi
     // allocate enough space for each pixel
     pixel_coords.clear();
     pixel_coords.reserve(points3D.size());
-    double scale = 2^(image_scale - 1);
+    double scale = pow(2, (image_scale - 1));
     // loop over each 3D point and project it into the camera at reproj_pose.
     // store the resulting 2D pixel in pixel_coords.
     for (const auto &world_p : points3D) {

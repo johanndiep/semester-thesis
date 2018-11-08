@@ -269,7 +269,7 @@ cv::Mat_<double> posest::Dataset::readDepthImage(int img_index, int cam_index, d
 
 cv::Mat_<double> posest::Dataset::readScaledDepthImage(cv::Mat_<double> depth_map, const double image_scale) const {
     cv::Mat_<double> depth_map_scaled;
-    double scale = 2^(image_scale - 1);
+    double scale = pow(2, (image_scale - 1));
     cv::resize(depth_map, depth_map_scaled, cv::Size(depth_map.cols/scale, depth_map.rows/scale));
     return depth_map_scaled;
 }
@@ -281,7 +281,7 @@ cv::Mat_<uchar> posest::Dataset::readBlurredImage(const int index, const int cam
 }
 
 cv::Mat_<uchar> posest::Dataset::readBlurredScaledImage(const int index, const int cam_index, const double image_scale) const {
-    double scale = 2^(image_scale - 1);
+    double scale = pow(2, (image_scale - 1));
     string cam_name = this->cameras[cam_index];
     string path = base_path + "/blurred/" + cam_name + "/" + std::to_string(index) + ".png";
     cv::Mat_<uchar> LoadedImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
@@ -296,7 +296,7 @@ cv::Mat_<uchar> posest::Dataset::readSharpImage(const int index, const int cam_i
 }
 
 cv::Mat_<uchar> posest::Dataset::readSharpScaledImage(const int index, const int cam_index, const double image_scale) const {
-    double scale = 2^(image_scale - 1);
+    double scale = pow(2, (image_scale - 1));
     string cam_name = this->cameras[cam_index];
     string path = base_path + "/rgb/" + cam_name + "/" + std::to_string(index) + ".png";
     cv::Mat_<uchar> LoadedImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
