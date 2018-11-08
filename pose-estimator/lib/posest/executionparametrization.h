@@ -165,7 +165,6 @@ class ExecutionParametrization {
         else {
             ref_depth = dataset.readDepthImage(ref_img_index, cam_index, sigma);
             ref_depth = dataset.readScaledDepthImage(ref_depth, image_scale);
-
         }
 
         // calculate pose where solver should start in the first iteration
@@ -173,8 +172,10 @@ class ExecutionParametrization {
 
         if (exact_initial_pose == true) {
             // solved pose from previous run at lower scale
-            CPose3DQuat initial_pose = solved_pose_lower_scale;
+            initial_pose = solved_pose_lower_scale;
         }
+
+        std::cout << initial_pose << std::endl;
 
         // setup pipeline with reprojector, blurrer and solver
         posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose, image_scale);

@@ -159,7 +159,8 @@ cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0
 
 * changes: downscale by 2, 0.15 offset
 
-cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.124354,0.0179113,-0.0819465,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00795174,0.0013827,-0.00406823,0.999997,-0.0012102,0.00198302,-4.27345e-05, solved_pose: -0.822611,1.30107,0.911968,0.303882,-0.351856,0.670726,-0.57791, err_dist: 0.00903839, err_rot_angle: 0.00464706, num_iterations: 27, total_time: 201.548, convergence: 1
+cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 
+0,initial_offset: 0.124354,0.0179113,-0.0819465,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00795174,0.0013827,-0.00406823,0.999997,-0.0012102,0.00198302,-4.27345e-05, solved_pose: -0.822611,1.30107,0.911968,0.303882,-0.351856,0.670726,-0.57791, err_dist: 0.00903839, err_rot_angle: 0.00464706, num_iterations: 27, total_time: 201.548, convergence: 1
 
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.0259158,0.0107824,0.14735,1,0,0,0, initial_offset_dist: 0.15, initial_offset_rot_angle: 0, n_images: 20, err: -0.00824088,-0.00028084,-0.00544473,0.999997,-0.00154574,0.00210864,-0.000127924, solved_pose: -0.821853,1.3002,0.910121,0.304133,-0.35177,0.670523,-0.578066, err_dist: 0.0098811, err_rot_angle: 0.00523528, num_iterations: 27, total_time: 201.678, convergence: 1
 
@@ -290,7 +291,8 @@ initial_pose: -0.941328,1.00134,0.919625,0.324445,-0.386076,0.660695,-0.556023, 
 =============================================================
 Layer: 2
 initial_pose: -0.937418,0.999182,0.918747,0.324817,-0.385991,0.660869,-0.55566, err: -0.0225529,0.00427451,-0.00707636,0.999987,-0.00147749,0.00482642,-0.000669728, solved_pose: -0.938076,0.997225,0.915801,0.325492,-0.385907,0.660535,-0.55572, err_dist: 0.0240204, err_rot_angle: 0.0101835, num_iterations: 31, total_time: 57.7476, convergence: 1, image_scale: 2
-=============================================================
+============================================================
+=
 Layer: 1
 initial_pose: -0.938076,0.997225,0.915801,0.325492,-0.38590.0036117607,0.660535,-0.55572, err: -0.020418,0.00801035,-0.00326473,0.99999,-0.000613289,0.0043488,-0.000741242, solved_pose: -0.939758,1.00061,0.920127,0.324884,-0.385872,0.661199,-0.555309, err_dist: 0.0221747, err_rot_angle: 0.00890792, num_iterations: 33, total_time: 277.373, convergence: 1, image_scale: 1
 =============================================================
@@ -298,7 +300,7 @@ initial_pose: -0.938076,0.997225,0.915801,0.325492,-0.38590.0036117607,0.660535,
 Results for Plotting
 ------------
 
-* image distance 25cm (-0.821577 1.31002 0.911207)
+* image distance 25cm (Goal: -0.821577 1.31002 0.911207)
 
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0,0,0,1,0,0,0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 10, err: -0.00510882,0.00786397,0.00210914,0.999999,0.000198503,0.00145802,0.000124473, solved_pose: -0.825228,1.30633,0.919296,0.302939,-0.352091,0.67164,-0.577199, err_dist: 0.009612, err_rot_angle: 0.00295346, num_iterations: 20, total_time: 149.511, convergence: 1
 
@@ -322,7 +324,7 @@ cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0
 
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.12538,0.0551062,0.209149,1,0,0,0, initial_offset_dist: 0.25, initial_offset_rot_angle: 0, n_images: 10, err: -0.00863049,0.000216463,-0.00509217,0.999996,-0.00142552,0.0023376,-0.00012071, solved_pose: -0.822297,1.30004,0.910662,0.304241,-0.351943,0.670521,-0.577906, err_dist: 0.0100231, err_rot_angle: 0.00548127, num_iterations: 55, total_time: 1186.34, convergence: 1
 
-* image distance 50cm (-0.93373 1.02066 0.91282)
+* image distance 50cm (Goal: -0.93373 1.02066 0.91282)
 
 cam_index: 0, ref_img_index: 1, blurred_img_index: 3, sigma: 0,initial_offset: 0,0,0,1,0,0,0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 10, err: -0.00611934,0.0104569,0.00413125,0.999999,-0.00022892,0.00131672,-0.000348299, solved_pose: -0.938725,1.01648,0.923838,0.322511,-0.384571,0.662243,-0.556351, err_dist: 0.0128008, err_rot_angle: 0.00276222, num_iterations: 23, total_time: 217.181, convergence: 1
 
@@ -346,7 +348,7 @@ cam_index: 0, ref_img_index: 1, blurred_img_index: 3, sigma: 0,initial_offset: 0
 
 cam_index: 0, ref_img_index: 1, blurred_img_index: 3, sigma: 0,initial_offset: 0.218435,0.0763935,-0.0946058,1,0,0,0, initial_offset_dist: 0.25, initial_offset_rot_angle: 0, n_images: 10, err: -0.0151336,0.018471,0.00688247,0.999995,0.00145197,0.00286249,-0.000249731, solved_pose: -0.944256,1.00924,0.932221,0.322833,-0.386036,0.662641,-0.554672, err_dist: 0.024851, err_rot_angle: 0.00643878, num_iterations: 50, total_time: 816.342, convergence: 1
 
-* image distance 25cm - 10 layers (-0.821577 1.31002 0.911207)
+* image distance 25cm - 10 layers (Goal: -0.821577 1.31002 0.911207)
 
 Layer: 10
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0,0,-0,1,0,0,-0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 10, err: 0.00387001,0.0101954,-0.0064195,1,-0.000810507,0.000345418,3.55667e-05, solved_pose: -0.812916,1.30871,0.92034,0.302597,-0.351084,0.671425,-0.578242, err_dist: 0.0126544, err_rot_angle: 0.00176352, num_iterations: 9, total_time: 0.55093, convergence: 1, image_scale: 10
@@ -473,6 +475,7 @@ initial_pose: -0.821283,1.30622,0.913352,0.302942,-0.35149,0.671022,-0.578283, e
 =============================================================
 
 Layer: 10
+
 cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.00453496,5.60162e-05,-0.0998971,1,0,0,0, initial_offset_dist: 0.1, initial_offset_rot_angle: 0, n_images: 10, err: 0.017987,0.0124836,0.00515664,0.999995,-0.000582102,-0.00233079,0.0019263, solved_pose: -0.813873,1.32665,0.924242,0.299624,-0.350876,0.671699,-0.579596, err_dist: 0.0224936, err_rot_angle: 0.00615861, num_iterations: 15, total_time: 1.88926, convergence: 1, image_scale: 10
 =============================================================
 Layer: 9
@@ -695,7 +698,7 @@ Layer: 1
 initial_pose: -0.822744,1.30026,0.911722,0.303995,-0.351918,0.670667,-0.577881, err: -0.0087898,-0.00165783,-0.0064831,0.999995,-0.00181764,0.00241148,-0.000173156, solved_pose: -0.821476,1.29928,0.908608,0.304458,-0.351832,0.67029,-0.578128, err_dist: 0.0110472, err_rot_angle: 0.00604948, num_iterations: 51, total_time: 908.907, convergence: 1, image_scale: 1
 =============================================================
 
-* Image distance 50cm - 10 layers (-0.93373 1.02066 0.91282)
+* Image distance 50cm - 10 layers (Goal: -0.93373 1.02066 0.91282)
 
 Layer: 10
 cam_index: 0, ref_img_index: 1, blurred_img_index: 3, sigma: 0,initial_offset: 0,0,-0,1,0,0,0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 10, err: 4.93993e-05,0.000196435,1.32957e-05,1,-3.87312e-05,2.42912e-05,-3.63261e-05, solved_pose: -0.933687,1.02069,0.913016,0.321408,-0.38412,0.662645,-0.556822, err_dist: 0.000202987, err_rot_angle: 0.000116786, num_iterations: 13, total_time: 0.872768, convergence: 1, image_scale: 10
@@ -1037,3 +1040,15 @@ initial_pose: -0.940531,1.02366,0.937129,0.320333,-0.385185,0.663581,-0.555589, 
 Layer: 1
 initial_pose: -0.940862,1.01254,0.927639,0.322631,-0.385471,0.662172,-0.555742, err: -0.00622817,0.0181667,0.00948679,0.999998,0.00136863,0.00113221,-0.000184877, solved_pose: -0.942141,1.01832,0.93238,0.321684,-0.38509,0.663128,-0.555415, err_dist: 0.02142, err_rot_angle: 0.00357169, num_iterations: 37, total_time: 475.328, convergence: 1, image_scale: 1
 =============================================================
+
+* Image distance from 1 to 2 (1: 0.93579 0.0281295 0.0740478 -0.343544 -0.684809 1.59021 0.91045 - 0.951512 0.0225991 0.0716038 -0.298306 -0.821577 1.31002 0.911207, Initialization: -0.4214,1.0203,0.8344,0.3021,-0.3511,0.6720,-0.5778)
+
+Ideal: cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0,0,0,1,0,0,0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 20, err: -0.00458572,0.00784235,0.0022057,0.999999,0.000206015,0.00138085,9.46876e-05, solved_pose: -0.825012,1.30681,0.919289,0.302901,-0.352029,0.671679,-0.577213, err_dist: 0.0093486, err_rot_angle: 0.00279868, num_iterations: 11, total_time: 165.819, convergence: 1
+
+No CtS: cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0.00942315,0.00194457,0.499907,1,0,0,-0, initial_offset_dist: 0.5, initial_offset_rot_angle: 0, n_images: 20, err: -0.00770802,0.000639121,-0.00433893,0.999997,-0.00133051,0.00214259,-0.000108664, solved_pose: -0.82234,1.30118,0.911192,0.30407,-0.351867,0.670631,-0.577915, err_dist: 0.00886839, err_rot_angle: 0.00504887, num_iterations: 93, total_time: 3724.45, convergence: 1
+
+CtS 3: cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0,0,-0,1,0,0,-0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 20, err: -0.00454954,-0.024927,-0.0215486,0.999974,-0.00688297,0.00204899,-0.000424602, solved_pose: -0.809351,1.29612,0.883571,0.306132,-0.349916,0.667546,-0.581571, err_dist: 0.0332625, err_rot_angle: 0.0143882, num_iterations: 98, total_time: 432.874, convergence: 1
+
+CtS 2: cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0,0,-0,1,0,0,-0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 20, err: -0.00820402,-0.000213186,-0.00536316,0.999997,-0.0015349,0.00209752,-0.000125141, solved_pose: -0.82189,1.30027,0.9102,0.30412,-0.351768,0.670532,-0.578063, err_dist: 0.00980382, err_rot_angle: 0.0052043, num_iterations: 33, total_time: 254.806, convergence: 1
+
+CtS 1: cam_index: 0, ref_img_index: 1, blurred_img_index: 2, sigma: 0,initial_offset: 0,0,0,1,0,0,0, initial_offset_dist: 0, initial_offset_rot_angle: 0, n_images: 20, err: -0.00778835,0.00114329,-0.0039492,0.999997,-0.00121794,0.00215092,-0.000110554, solved_pose: -0.822642,1.30129,0.911747,0.304037,-0.351905,0.670694,-0.577836, err_dist: 0.00880691, err_rot_angle: 0.00494856, num_iterations: 12, total_time: 208.385, convergence: 1

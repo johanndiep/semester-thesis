@@ -121,8 +121,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Uncomment the following lines in order to generate a snapshot image after each solving iteration
-    // params.snapshot_path = output_file + ".png";
-    // params.snap_only_final = false;
+    params.snapshot_path = output_file + ".png";
+    params.snap_only_final = false;
 
     // print out parametrization
     cout << endl << "=============================================================" << endl;
@@ -143,13 +143,13 @@ int main(int argc, char *argv[]) {
     cout << "       output_file: " << output_file << endl;
     cout << "             sigma: " << params.sigma << endl;
     if (argc > 11) {
-        cout << "    initial_pose_x: " << argv[10] << endl;
-        cout << "    initial_pose_y: " << argv[11] << endl;
-        cout << "    initial_pose_z: " << argv[12] << endl;
-        cout << "   initial_pose_qw: " << argv[13] << endl;
-        cout << "   initial_pose_qx: " << argv[14] << endl;
-        cout << "   initial_pose_qy: " << argv[15] << endl;
-        cout << "   initial_pose_qz: " << argv[16] << endl;
+        cout << "    initial_pose_x: " << params.solved_pose_lower_scale.m_coords[0] << endl;
+        cout << "    initial_pose_y: " << params.solved_pose_lower_scale.m_coords[1] << endl;
+        cout << "    initial_pose_z: " << params.solved_pose_lower_scale.m_coords[2] << endl;
+        cout << "   initial_pose_qw: " << params.solved_pose_lower_scale.m_quat[0] << endl;
+        cout << "   initial_pose_qx: " << params.solved_pose_lower_scale.m_quat[1] << endl;
+        cout << "   initial_pose_qy: " << params.solved_pose_lower_scale.m_quat[2] << endl;
+        cout << "   initial_pose_qz: " << params.solved_pose_lower_scale.m_quat[3] << endl;
     }
 
     // google logging is used by ceres and needs to be initialized only once
