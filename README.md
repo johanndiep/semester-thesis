@@ -84,4 +84,4 @@ Implementation
 ------------
 
 * Coarse-to-fine image resolution: Implementation of the coarse-to-fine method to run the minimalization step more efficiently. 
-* Neural 3D mesh renderer: using neural 3D mesh for 3D reconstruction
+* Neural 3D mesh renderer: using 3D mesh for 3D reconstruction
