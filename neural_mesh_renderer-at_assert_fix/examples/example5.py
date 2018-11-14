@@ -11,6 +11,7 @@ import numpy as np
 from skimage.io import imread, imsave
 import tqdm
 import imageio
+from scipy.misc import imshow
 
 from liegroups.torch import SE3
 from liegroups.torch import SO3
@@ -164,7 +165,7 @@ def make_reference_image(filename_ref, filename_obj):
     model.cuda()
 
     T = se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0, 0, 0]]))
-    print(T)
+    #print(T)
     
     K = torch.tensor([[128., 0., 128.], [0., 128., 128.], [0., 0., 1.]]).float().cuda()
     K = torch.unsqueeze(K, 0)
@@ -175,14 +176,15 @@ def make_reference_image(filename_ref, filename_obj):
     model.renderer.dist_coeffs = dist_coeffs
 
     images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
-    print(images.size())
+    #print(images.size())
     image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)    
     imsave(filename_ref, image)
+    #imshow(image)
 
     depth = model.renderer.render_depth(T, model.vertices, model.faces)
     depth = depth.detach().cpu().numpy()[0]
-    print(depth.shape)
-    print(depth[128, 128])
+    #print(depth.shape)
+    #print(depth[128, 128])
 
     np.savetxt('depth.txt', depth, delimiter=' ') 
 

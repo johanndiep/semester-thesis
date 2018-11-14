@@ -37,10 +37,11 @@ def projection(vertices, P, K, dist_coeffs, img_size):
     #y__ = y_*(1 + k1*(r**2) + k2*(r**4) + k3 *(r**6)) + p1*(r**2 + 2*y_**2) + 2*p2*x_*y_
 
     # get camera intrinsics
-    fx = K[0]
-    fy = K[1]
-    cx = K[2]
-    cy = K[3]
+
+    fx = (K[0][0][0]).item()
+    fy = (K[0][1][1]).item()
+    cx = (K[0][0][2]).item()
+    cy = (K[0][1][2]).item()
 
     X = img_size[:, 0].float()
     Y = img_size[:, 1].float()
