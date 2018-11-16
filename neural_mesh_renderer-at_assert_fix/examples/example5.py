@@ -92,7 +92,7 @@ def so3_exp(phi):
     s = s.unsqueeze(1).unsqueeze(2)
     one_minus_c = one_minus_c.unsqueeze(1).unsqueeze(2)
     
-    A = c* I 
+    A = c* I
     B = one_minus_c * axis2
     C = s * wedge_axis
     
@@ -119,7 +119,7 @@ class Model(nn.Module):
         self.register_buffer('vertices', vertices[None, :, :])
         self.register_buffer('faces', faces[None, :, :])
 
-        print(vertices.shape)
+        #print(vertices.shape)
 
         # create textures
         texture_size = 2
@@ -164,10 +164,14 @@ def make_reference_image(filename_ref, filename_obj):
     model = Model(filename_obj)
     model.cuda()
 
+    #T = se3_exp(torch.tensor([[-0.684809, 1.59021, 0.91045, -0.8584986, 1.8585109, -1.5835546]]))
     T = se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0, 0, 0]]))
-    #print(T)
-    
+
+    #print(T.shape)
+
+    #K = torch.tensor([[320., 0., 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
     K = torch.tensor([[128., 0., 128.], [0., 128., 128.], [0., 0., 1.]]).float().cuda()
+
     K = torch.unsqueeze(K, 0)
     model.renderer.K = K
 
@@ -192,8 +196,8 @@ def make_reference_image(filename_ref, filename_obj):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-io', '--filename_obj', type=str, default=os.path.join(data_dir, 'teapot.obj'))
-    parser.add_argument('-ir', '--filename_ref', type=str, default=os.path.join(data_dir, 'example4_ref.png'))
-    parser.add_argument('-or', '--filename_output', type=str, default=os.path.join(data_dir, 'example4_result.gif'))
+    parser.add_argument('-ir', '--filename_ref', type=str, default=os.path.join(data_dir, 'example5_ref.png'))
+    parser.add_argument('-or', '--filename_output', type=str, default=os.path.join(data_dir, 'example5_result.gif'))
     parser.add_argument('-mr', '--make_reference_image', type=int, default=1)
     parser.add_argument('-g', '--gpu', type=int, default=1)
     args = parser.parse_args()
