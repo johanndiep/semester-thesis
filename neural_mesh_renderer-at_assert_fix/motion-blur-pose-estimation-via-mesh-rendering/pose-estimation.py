@@ -9,14 +9,25 @@ import meshzoo
 import numpy as np
 import sys
 import neural_renderer as nr
-import OpenEXR as exr
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 
 class Model(nn.Module):
-    def __init__(self):
+    def __init__(self, vertices, faces):
         super(Model, self).__init__()
+
+        self.register_buffer('vertices', vertices[None, :, :])
+        self.register_buffer('faces', faces[None, :, :])
+
+        texture_size = 2
+        textures = torch.ones(1, faces.shape[1], texture_size, texture_size, texture_size, 3,
+                              dtype = torch.float32)
+        self.register_buffer('textures', textures)
+
+        renderer = nr.ProjectiveRenderer()
+        self.renderer = renderer
+
 
 class CameraParameter():
     def __init__(self):
@@ -26,6 +37,7 @@ class CameraParameter():
         self.img_size_y = 640
 
         self.scale = 0
+
 
 class MeshGeneration(CameraParameter):
     def __init__(self):
@@ -62,12 +74,13 @@ class MeshGeneration(CameraParameter):
         absolute_mesh = torch.ones_like(unit_ray)
 
         for ray_index in range(0, len(unit_ray)):
-            print("Hello")
+            print("in construction")
 
         return absolute_mesh
 
     def make_reference_image(self):
         pass
+
 
 def main():
     #print(sys.version)
