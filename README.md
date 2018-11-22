@@ -60,6 +60,11 @@ git clone https://gitlab.com/jdiep/semester-thesis -b 3-neural-mesh-reprojection
 docker exec -it container_name bash
 ```
 
+### To compile neural library
+```bash
+python setup.py install --user
+```
+
 
 Hyperparameters chosen so far
 ------------
