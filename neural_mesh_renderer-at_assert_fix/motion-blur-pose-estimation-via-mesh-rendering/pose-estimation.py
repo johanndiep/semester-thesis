@@ -9,12 +9,15 @@ import meshzoo
 import numpy as np
 import sys
 import neural_renderer as nr
+import pandas as pd
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
+depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map.csv'
+
 
 class Model(nn.Module):
-    def __init__(self, vertices, faces):
+    def __init__(self, vertices, faces, img_size_x, img_size_y):
         super(Model, self).__init__()
 
         self.register_buffer('vertices', vertices[None, :, :])
@@ -25,7 +28,7 @@ class Model(nn.Module):
                               dtype = torch.float32)
         self.register_buffer('textures', textures)
 
-        renderer = nr.ProjectiveRenderer()
+        renderer = nr.ProjectiveRenderer(image_size =[img_size_x, img_size_y])
         self.renderer = renderer
 
 
@@ -65,21 +68,30 @@ class MeshGeneration(CameraParameter):
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
         zz = torch.ones_like(xx)
 
-        unit_ray = torch.stack([xx, yy, zz], dim=-1)
-        unit_ray = unit_ray.view(-1, 3)
+        xx, yy, zz = absolute_mesh = self.absolute_mesh(xx, yy, zz)
 
-        return unit_ray, faces
+        pointcloud_ray = torch.stack([xx, yy, zz], dim=-1)
+        pointcloud_ray = pointcloud_ray.view(-1, 3)
 
-    def absolute_mesh(self, unit_ray):
-        absolute_mesh = torch.ones_like(unit_ray)
+        return pointcloud_ray, torch.tensor(faces).cuda()
 
-        for ray_index in range(0, len(unit_ray)):
-            print("in construction")
+    def absolute_mesh(self, xx, yy, zz):
 
-        return absolute_mesh
+        depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
+        depth_values = depth_df.values
 
-    def make_reference_image(self):
-        pass
+        depth_tensor = torch.tensor(depth_values).float().cuda()
+        depth_tensor = torch.transpose(depth_tensor, 0, 1)
+
+        zz = depth_tensor / torch.sqrt(xx ** 2 + yy ** 2 + 1)
+        xx = zz * xx
+        yy = zz * yy
+
+        return xx, yy, zz
+
+    def make_reference_image(self, pointcloud_ray, faces):
+        model = Model(pointcloud_ray, faces, img_size_x = self.img_size_x,
+                      img_size_y = self.img_size_y)
 
 
 def main():
@@ -96,12 +108,13 @@ def main():
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
     room_mesh = MeshGeneration()
-    unit_ray, faces = room_mesh.generate_mean_mesh()
+    pointcloud_ray, faces = room_mesh.generate_mean_mesh()
 
     if args.make_reference_image:
-        room_mesh.make_reference_image()
+        room_mesh.make_reference_image(pointcloud_ray, faces)
 
     print("Everything ok")
+
 
 if __name__ == '__main__':
     main()
