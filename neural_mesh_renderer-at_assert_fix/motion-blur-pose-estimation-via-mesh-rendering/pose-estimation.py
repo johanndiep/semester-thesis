@@ -32,6 +32,11 @@ class Model(nn.Module):
         self.renderer = renderer
 
 
+class PoseTransformation():
+    def se3_exp(self, tangent):
+        
+
+
 class CameraParameter():
     def __init__(self):
         self.K = torch.tensor([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
@@ -92,6 +97,10 @@ class MeshGeneration(CameraParameter):
     def make_reference_image(self, pointcloud_ray, faces):
         model = Model(pointcloud_ray, faces, img_size_x = self.img_size_x,
                       img_size_y = self.img_size_y)
+        model.cuda()
+
+        transformation = PoseTransformation()
+        T = transformation.se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0.0, 0.0, 0.0]]))
 
 
 def main():
