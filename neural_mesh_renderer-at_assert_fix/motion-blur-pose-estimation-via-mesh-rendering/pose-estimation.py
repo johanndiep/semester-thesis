@@ -34,7 +34,87 @@ class Model(nn.Module):
 
 class PoseTransformation():
     def se3_exp(self, tangent):
+        if tangent.dim() < 2:
+            tangent = tangent.unsqueeze(dim = 0)
+
+        t = tangent[:, :3]
+        phi = tangent[:, 3:]
+
+        R, R_jac = self.so3_exp(phi)
+        t = t.unsqueeze(2)
+
         
+
+    def so3_exp(self, phi):
+        if phi.dim() < 2:
+            phi = phi.unsqueeze(dim = 0)
+
+        jac = phi.__class__(phi.shape[0], 3, 3)
+        angle = phi.norm(p = 2, dim = 1)
+        angle = angle + 1e-5
+
+        s = angle.sin()
+        c = angle.cos()
+
+        s_div_angle = s / angle
+        one_minus_s_div_angle = 1. - s_div_angle
+        one_minus_c = 1. - c
+        one_minus_c_div_angle = one_minus_c / angle
+
+        angle = angle.unsqueeze(1)
+        axis = phi / angle
+
+        I = torch.eye(3).expand_as(jac)
+
+        s_div_angle = s_div_angle.unsqueeze(1).unsqueeze(2)
+        one_minus_s_div_angle = one_minus_s_div_angle.unsqueeze(1).unsqueeze(2)
+        one_minus_c_div_angle = one_minus_c_div_angle.unsqueeze(1).unsqueeze(2)
+
+        axis2 = self.outer(axis, axis)
+        wedge_axis = self.wedge(axis)
+
+        A_jac = s_div_angle * I
+        B_jac = one_minus_s_div_angle * axis2
+        C_jac = one_minus_c_div_angle * wedge_axis
+
+        c = c.unsqueeze(1).unsqueeze(2)
+        s = s.unsqueeze(1).unsqueeze(2)
+        one_minus_c = one_minus_c.unsqueeze(1).unsqueeze(2)
+
+        A = c * I
+        B = one_minus_c * axis2
+        C = s * wedge_axis
+
+        return A + B + C
+
+    def outer(self, vecs1, vecs2):
+        if vecs1.dim() < 2:
+            vecs1 = vecs1.unsqueeze(dim = 0)
+
+        if vecs2.dim() < 2:
+            vecs2 = vecs2.unsqueeze(dim = 0)
+
+        if vecs1.shape[0] != vecs2.shape[0]:
+            raise ValueError("Inconsistent batch sizes {} and {}".format(vecs1.shape[0], vec2.shape[0]))
+
+        return torch.bmm(vecs1.unsqueeze(dim = 2), vecs2.unsqueeze(dim = 2).transpose(2, 1)).squeeze_()
+
+    def wedge(self, phi):
+        if phi.dim() < 2:
+            phi.unsqueeze(dim = 0)
+
+        if phi.shape[1] != 3:
+            raise ValueError("phi must have shape ({},) or (N,{})".format(3, 3))
+
+        Phi = phi.__class__(phi.shape[0], 3, 3).zero_()
+        Phi[:, 0, 1] = -phi [:, 2]
+        Phi[:, 1, 0] = phi[:, 2]
+        Phi[:, 0, 2] = phi[:, 1]
+        Phi[:, 2, 0] = -phi[:, 1]
+        Phi[:, 1, 2] = -phi[:, 0]
+        Phi[:, 2, 1] = phi[:, 0]
+
+        return Phi.squeeze_()
 
 
 class CameraParameter():
