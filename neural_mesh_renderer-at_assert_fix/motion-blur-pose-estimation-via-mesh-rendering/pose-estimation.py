@@ -11,6 +11,7 @@ import sys
 import neural_renderer as nr
 import pandas as pd
 import matplotlib.pyplot as plt
+from skimage.io import imsave
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
@@ -22,8 +23,8 @@ class CameraParameter():
 
         self.K = torch.tensor([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
 
-        self.img_size_x = 480
-        self.img_size_y = 640
+        self.img_size_x = 640
+        self.img_size_y = 480
 
         self.scale = 0
 
@@ -33,12 +34,11 @@ class CameraParameter():
 class Model(CameraParameter, nn.Module):
     def __init__(self, vertices, faces):
         super(Model, self).__init__()
-
         self.register_buffer('vertices', vertices[None, :, :])
         self.register_buffer('faces', faces[None, :, :])
 
         texture_size = 2
-        textures = torch.ones(1, faces.shape[1], texture_size, texture_size, texture_size, 3,
+        textures = torch.ones(1, self.faces.shape[1], texture_size, texture_size, texture_size, 3,
                               dtype = torch.float32)
         self.register_buffer('textures', textures)
 
@@ -155,8 +155,8 @@ class MeshGeneration(CameraParameter):
         x = torch.arange(0, self.img_size_x, 1).float().cuda()
         y = torch.arange(0, self.img_size_y, 1).float().cuda()
 
-        x_ = (x - self.K[1][2]) / self.K[1][1]
-        y_ = (y - self.K[0][2]) / self.K[0][0]
+        x_ = (x - self.K[0][2]) / self.K[0][0]
+        y_ = (y - self.K[1][2]) / self.K[1][1]
 
         xx = x_.repeat(self.img_size_y, 1)
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
@@ -167,7 +167,7 @@ class MeshGeneration(CameraParameter):
         pointcloud_ray = torch.stack([xx, yy, zz], dim=-1)
         pointcloud_ray = pointcloud_ray.view(-1, 3)
 
-        return pointcloud_ray, torch.tensor(faces).cuda()
+        return pointcloud_ray, torch.tensor(faces).int().cuda()
 
     def absolute_mesh(self, xx, yy, zz):
 
@@ -175,7 +175,6 @@ class MeshGeneration(CameraParameter):
         depth_values = depth_df.values
 
         depth_tensor = torch.tensor(depth_values).float().cuda()
-        depth_tensor = torch.transpose(depth_tensor, 0, 1)
 
         zz = depth_tensor / torch.sqrt(xx ** 2 + yy ** 2 + 1)
         xx = zz * xx
@@ -190,9 +189,9 @@ class MeshGeneration(CameraParameter):
         transformation = PoseTransformation()
         T = transformation.se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0.0, 0.0, 0.0]]))
 
-        images = model.renderer.render(T, model.vertices, model.faces, torch.tanh(model.textures))
-        #image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
-        #imsave(filename_ref, image)
+        images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
+        image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
+        imsave(filename_ref, image)
 
 def main():
     #print(sys.version)
@@ -209,14 +208,9 @@ def main():
 
     room_mesh = MeshGeneration()
     pointcloud_ray, faces = room_mesh.generate_mean_mesh()
-    print(pointcloud_ray)
 
-    test = pointcloud_ray.detach().cpu().numpy()
-    print(test)
-    np.savetxt("points", test)
-
-    #if args.make_reference_image:
-    #    room_mesh.make_reference_image(args.filename_ref, pointcloud_ray, faces)
+    if args.make_reference_image:
+        room_mesh.make_reference_image(args.filename_ref, pointcloud_ray, faces)
 
     print("Everything ok")
 

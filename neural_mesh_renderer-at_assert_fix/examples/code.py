@@ -128,7 +128,7 @@ def generate_mean_mesh(K, img_size, scale=0):
     K = K / scale
     img_size = int(img_size // scale)
 
-    _, faces = meshzoo.rectangle(
+    points, faces = meshzoo.rectangle(
         xmin = -1., xmax = 1.,
         ymin = -1., ymax = 1.,
         nx = img_size, ny = img_size,

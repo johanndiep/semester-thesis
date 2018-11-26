@@ -153,7 +153,6 @@ class Model(nn.Module):
         return loss
 
 def make_gif(filename):
-    print("making gif")
     with imageio.get_writer(filename, mode='I') as writer:
         for filename in sorted(glob.glob('/tmp/_tmp_*.png')):
             writer.append_data(imread(filename))
@@ -165,7 +164,7 @@ def make_reference_image(filename_ref, filename_obj):
     model = Model(filename_obj)
     model.cuda()
 
-    T = se3_exp(torch.tensor([[0.0, 0.0, 5.0, 0, 3, 0]]))
+    T = se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0, 0, 0]]))
 
     #print(T.shape)
 
