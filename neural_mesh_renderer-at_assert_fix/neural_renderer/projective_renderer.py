@@ -22,6 +22,7 @@ class ProjectiveRenderer(nn.Module):
         img_size: Bx2 image resolution [W, H] or [X, Y]
         '''
         super(ProjectiveRenderer, self).__init__()
+
         # rendering
         self.image_size = torch.unsqueeze(torch.tensor([image_size, image_size]).cuda(), 0)
         self.anti_aliasing = anti_aliasing

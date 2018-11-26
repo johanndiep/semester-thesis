@@ -10,14 +10,28 @@ import numpy as np
 import sys
 import neural_renderer as nr
 import pandas as pd
+import matplotlib.pyplot as plt
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map.csv'
 
+class CameraParameter():
+    def __init__(self):
+        super(CameraParameter, self).__init__() 
 
-class Model(nn.Module):
-    def __init__(self, vertices, faces, img_size_x, img_size_y):
+        self.K = torch.tensor([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
+
+        self.img_size_x = 480
+        self.img_size_y = 640
+
+        self.scale = 0
+
+        self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda()
+
+
+class Model(CameraParameter, nn.Module):
+    def __init__(self, vertices, faces):
         super(Model, self).__init__()
 
         self.register_buffer('vertices', vertices[None, :, :])
@@ -28,7 +42,11 @@ class Model(nn.Module):
                               dtype = torch.float32)
         self.register_buffer('textures', textures)
 
-        renderer = nr.ProjectiveRenderer(image_size =[img_size_x, img_size_y])
+        K = self.K
+        K = torch.unsqueeze(K, 0)
+
+        renderer = nr.ProjectiveRenderer(image_size = [self.img_size_x, self.img_size_y],
+                                                       K = K)
         self.renderer = renderer
 
 
@@ -43,7 +61,8 @@ class PoseTransformation():
         R, R_jac = self.so3_exp(phi)
         t = t.unsqueeze(2)
 
-        
+        trans = torch.bmm(R_jac, t)
+        return torch.cat([R, trans], dim = 2)
 
     def so3_exp(self, phi):
         if phi.dim() < 2:
@@ -85,7 +104,7 @@ class PoseTransformation():
         B = one_minus_c * axis2
         C = s * wedge_axis
 
-        return A + B + C
+        return A + B + C, A_jac + B_jac + C_jac
 
     def outer(self, vecs1, vecs2):
         if vecs1.dim() < 2:
@@ -117,16 +136,6 @@ class PoseTransformation():
         return Phi.squeeze_()
 
 
-class CameraParameter():
-    def __init__(self):
-        self.K = torch.tensor([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
-
-        self.img_size_x = 480
-        self.img_size_y = 640
-
-        self.scale = 0
-
-
 class MeshGeneration(CameraParameter):
     def __init__(self):
         super(MeshGeneration, self).__init__()
@@ -146,8 +155,8 @@ class MeshGeneration(CameraParameter):
         x = torch.arange(0, self.img_size_x, 1).float().cuda()
         y = torch.arange(0, self.img_size_y, 1).float().cuda()
 
-        x_ = (x - self.K[0][2]) / self.K[0][0]
-        y_ = (y - self.K[1][2]) / self.K[1][1]
+        x_ = (x - self.K[1][2]) / self.K[1][1]
+        y_ = (y - self.K[0][2]) / self.K[0][0]
 
         xx = x_.repeat(self.img_size_y, 1)
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
@@ -174,14 +183,16 @@ class MeshGeneration(CameraParameter):
 
         return xx, yy, zz
 
-    def make_reference_image(self, pointcloud_ray, faces):
-        model = Model(pointcloud_ray, faces, img_size_x = self.img_size_x,
-                      img_size_y = self.img_size_y)
+    def make_reference_image(self, filename_ref, pointcloud_ray, faces):
+        model = Model(pointcloud_ray, faces)
         model.cuda()
 
         transformation = PoseTransformation()
         T = transformation.se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0.0, 0.0, 0.0]]))
 
+        images = model.renderer.render(T, model.vertices, model.faces, torch.tanh(model.textures))
+        #image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
+        #imsave(filename_ref, image)
 
 def main():
     #print(sys.version)
@@ -198,9 +209,14 @@ def main():
 
     room_mesh = MeshGeneration()
     pointcloud_ray, faces = room_mesh.generate_mean_mesh()
+    print(pointcloud_ray)
 
-    if args.make_reference_image:
-        room_mesh.make_reference_image(pointcloud_ray, faces)
+    test = pointcloud_ray.detach().cpu().numpy()
+    print(test)
+    np.savetxt("points", test)
+
+    #if args.make_reference_image:
+    #    room_mesh.make_reference_image(args.filename_ref, pointcloud_ray, faces)
 
     print("Everything ok")
 
