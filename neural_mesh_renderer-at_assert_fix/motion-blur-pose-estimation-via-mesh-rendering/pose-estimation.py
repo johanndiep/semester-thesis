@@ -11,11 +11,16 @@ import sys
 import neural_renderer as nr
 import pandas as pd
 import matplotlib.pyplot as plt
-from skimage.io import imsave
+import tqdm
+from skimage.io import imsave, imread
+from scipy.misc import imshow
+
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map.csv'
+
 
 class CameraParameter():
     def __init__(self):
@@ -29,25 +34,6 @@ class CameraParameter():
         self.scale = 0
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda()
-
-
-class Model(CameraParameter, nn.Module):
-    def __init__(self, vertices, faces):
-        super(Model, self).__init__()
-        self.register_buffer('vertices', vertices[None, :, :])
-        self.register_buffer('faces', faces[None, :, :])
-
-        texture_size = 2
-        textures = torch.ones(1, self.faces.shape[1], texture_size, texture_size, texture_size, 3,
-                              dtype = torch.float32)
-        self.register_buffer('textures', textures)
-
-        K = self.K
-        K = torch.unsqueeze(K, 0)
-
-        renderer = nr.ProjectiveRenderer(image_size = [self.img_size_x, self.img_size_y],
-                                                       K = K)
-        self.renderer = renderer
 
 
 class PoseTransformation():
@@ -136,6 +122,37 @@ class PoseTransformation():
         return Phi.squeeze_()
 
 
+class Model(CameraParameter, nn.Module, PoseTransformation):
+    def __init__(self, vertices, faces, filename_ref = None):
+        super(Model, self).__init__()
+        self.register_buffer('vertices', vertices[None, :, :])
+        self.register_buffer('faces', faces[None, :, :])
+
+        texture_size = 2
+        textures = torch.ones(1, self.faces.shape[1], texture_size, texture_size, texture_size, 3,
+                              dtype = torch.float32)
+        self.register_buffer('textures', textures)
+
+        K = self.K
+        K = torch.unsqueeze(K, 0)
+
+        renderer = nr.ProjectiveRenderer(image_size = [self.img_size_x, self.img_size_y],
+                                                       K = K)
+        self.renderer = renderer
+
+        if filename_ref != None:
+            image_ref  = torch.from_numpy((imread(filename_ref).max(-1) != 0).astype(np.float32))
+            self.register_buffer('image_ref', image_ref)
+
+            self.T = nn.Parameter(torch.from_numpy(np.array([1.0, 2.0, 3.0, 1, 0, 0], dtype = np.float32)).float().cuda())
+
+    def forward(self):
+        M = self.se3_exp(self.T)
+        image = self.renderer(M, self.vertices, self.faces, mode = 'silhouettes')
+        loss = torch.sum((image - self.image_ref[None, :, :]) ** 2)
+        return loss
+
+
 class MeshGeneration(CameraParameter):
     def __init__(self):
         super(MeshGeneration, self).__init__()
@@ -187,11 +204,17 @@ class MeshGeneration(CameraParameter):
         model.cuda()
 
         transformation = PoseTransformation()
-        T = transformation.se3_exp(torch.tensor([[0.0, 0.0, 3.0, 0.0, 0.0, 0.0]]))
+        T = transformation.se3_exp(torch.tensor([[0.0, 0.0, 0.15, 0.0, 0.0, 0.0]]))
 
         images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
         image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
         imsave(filename_ref, image)
+        imshow(image)
+
+        depth = model.renderer.render_depth(T, model.vertices, model.faces)
+        depth = depth.detach().cpu().numpy()[0]
+        np.savetxt('depth.txt', depth, delimiter = ' ')
+
 
 def main():
     #print(sys.version)
@@ -211,6 +234,29 @@ def main():
 
     if args.make_reference_image:
         room_mesh.make_reference_image(args.filename_ref, pointcloud_ray, faces)
+
+    model = Model(pointcloud_ray, faces, args.filename_ref)
+    model.cuda()
+
+    transformation = PoseTransformation()
+
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.1)
+
+    for i in tqdm.tqdm(range(1000)):
+        optimizer.zero_grad()
+        loss = model.forward()
+        loss.backward()
+        optimizer.step()
+
+        print (model.T)
+
+        M = transformation.se3_exp(model.T)
+        images = model.renderer(M, model.vertices, model.faces, torch.tanh(model.textures))
+        image = images.detach().cpu().numpy()[0].transpose(1,2,0)
+        imsave('/tmp/_tmp_%04d.png' % i, image)
+        loop.set_description('Optimizing (loss %.4f)' % loss.data)
+        if loss.item() < 70:
+            break
 
     print("Everything ok")
 
