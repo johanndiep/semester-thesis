@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import tqdm
 from skimage.io import imsave, imread
 from scipy.misc import imshow
-
+from pyquaternion import Quaternion
 
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -36,6 +36,13 @@ class CameraParameter():
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda()
 
+        start_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
+        self.start_quat = Quaternion(start_pose[:4])
+        self.start_tran = start_pose[4:] 
+        
+        cam_pose = np.array([0.5, -0.5, 0.5, -0.5, 0, 0, 0])
+        self.cam_quat = Quaternion(cam_pose[:4])
+        self.cam_tran = cam_pose[4:] 
 
 class PoseTransformation():
     def se3_exp(self, tangent):
@@ -184,6 +191,15 @@ class MeshGeneration(CameraParameter):
 
         pointcloud_ray = torch.stack([xx, yy, zz], dim=-1)
         pointcloud_ray = pointcloud_ray.view(-1, 3)
+
+        start_rotation = Quaternion(self.start_quat)
+        cam_rotation = Quaternion(self.cam_quat)
+
+        for index in range(0, pointcloud_ray.shape[0]):
+            rotated_point = start_rotation.rotate(cam_rotation.rotate(pointcloud_ray[index]))
+            pointcloud_ray[index] = torch.tensor(rotated_point).float() + torch.tensor(self.start_tran).float()
+
+        print(pointcloud_ray)
 
         return pointcloud_ray, torch.tensor(faces).int().cuda()
 
