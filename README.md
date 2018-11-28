@@ -51,6 +51,7 @@ docker cp container_name:/home/semester-thesis/file /home/johann
 
 ### After running bash
 ```bash
+apt-get update
 apt-get install libmrpt-dev
 git clone https://gitlab.com/jdiep/semester-thesis -b 3-neural-mesh-reprojection
 ```

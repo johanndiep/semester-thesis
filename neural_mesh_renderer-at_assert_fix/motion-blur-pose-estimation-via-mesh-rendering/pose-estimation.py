@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import os
 import meshzoo
+import meshio
 import numpy as np
 import sys
 import neural_renderer as nr
@@ -211,9 +212,9 @@ class MeshGeneration(CameraParameter):
         imsave(filename_ref, image)
         imshow(image)
 
-        depth = model.renderer.render_depth(T, model.vertices, model.faces)
-        depth = depth.detach().cpu().numpy()[0]
-        np.savetxt('depth.txt', depth, delimiter = ' ')
+        #depth = model.renderer.render_depth(T, model.vertices, model.faces)
+        #depth = depth.detach().cpu().numpy()[0]
+        #np.savetxt('depth.txt', depth, delimiter = ' ')
 
 
 def main():
@@ -230,33 +231,36 @@ def main():
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
     room_mesh = MeshGeneration()
-    pointcloud_ray, faces = room_mesh.generate_mean_mesh()
+    pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
+
+    np.savetxt('pointcloud.txt', pointcloud_ray)
+    meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
     if args.make_reference_image:
         room_mesh.make_reference_image(args.filename_ref, pointcloud_ray, faces)
 
-    model = Model(pointcloud_ray, faces, args.filename_ref)
-    model.cuda()
+    # model = Model(pointcloud_ray, faces, args.filename_ref)
+    # model.cuda()
 
-    transformation = PoseTransformation()
+    # transformation = PoseTransformation()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.1)
+    # optimizer = torch.optim.Adam(model.parameters(), lr = 0.1)
 
-    for i in tqdm.tqdm(range(1000)):
-        optimizer.zero_grad()
-        loss = model.forward()
-        loss.backward()
-        optimizer.step()
+    # for i in tqdm.tqdm(range(1000)):
+    #     optimizer.zero_grad()
+    #     loss = model.forward()
+    #     loss.backward()
+    #     optimizer.step()
 
-        print (model.T)
+    #     print (model.T)
 
-        M = transformation.se3_exp(model.T)
-        images = model.renderer(M, model.vertices, model.faces, torch.tanh(model.textures))
-        image = images.detach().cpu().numpy()[0].transpose(1,2,0)
-        imsave('/tmp/_tmp_%04d.png' % i, image)
-        loop.set_description('Optimizing (loss %.4f)' % loss.data)
-        if loss.item() < 70:
-            break
+    #     M = transformation.se3_exp(model.T)
+    #     images = model.renderer(M, model.vertices, model.faces, torch.tanh(model.textures))
+    #     image = images.detach().cpu().numpy()[0].transpose(1,2,0)
+    #     imsave('/tmp/_tmp_%04d.png' % i, image)
+    #     loop.set_description('Optimizing (loss %.4f)' % loss.data)
+    #     if loss.item() < 70:
+    #         break
 
     print("Everything ok")
 
