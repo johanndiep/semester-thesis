@@ -221,7 +221,7 @@ class MeshGeneration(CameraParameter):
         model.cuda()
 
         transformation = PoseTransformation()
-        T = transformation.se3_exp(torch.tensor([[0.0, 0.0, 0.15, 0.0, 0.0, 0.0]]))
+        T = transformation.se3_exp(torch.tensor([[-0.8584986, 1.8585109, -1.5835546, -0.684809, 1.59021, 0.91045]]))
 
         images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
         image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
