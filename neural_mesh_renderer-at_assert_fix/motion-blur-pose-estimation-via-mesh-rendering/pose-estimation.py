@@ -199,8 +199,6 @@ class MeshGeneration(CameraParameter):
             rotated_point = start_rotation.rotate(cam_rotation.rotate(pointcloud_ray[index]))
             pointcloud_ray[index] = torch.tensor(rotated_point).float() + torch.tensor(self.start_tran).float()
 
-        print(pointcloud_ray)
-
         return pointcloud_ray, torch.tensor(faces).int().cuda()
 
     def absolute_mesh(self, xx, yy, zz):
@@ -220,17 +218,37 @@ class MeshGeneration(CameraParameter):
         model = Model(pointcloud_ray, faces)
         model.cuda()
 
-        transformation = PoseTransformation()
-        T = transformation.se3_exp(torch.tensor([[-0.8584986, 1.8585109, -1.5835546, -0.684809, 1.59021, 0.91045]]))
+        cons_quat = self.start_quat * self.cam_quat
+        cons_quat_inv = cons_quat.inverse
+        R_inv = cons_quat_inv.rotation_matrix
+
+        start_tran_res = self.start_tran.reshape(3,1)
+        tran_inv = np.matmul(-R_inv, start_tran_res)
+
+        T = torch.ones(3,4).unsqueeze(dim = 0)
+
+        T[0][0][3] = tran_inv[0][0]
+        T[0][1][3] = tran_inv[1][0]
+        T[0][2][3] = tran_inv[2][0]
+        
+        T[0][0][0] = R_inv[0][0]
+        T[0][0][1] = R_inv[0][1]
+        T[0][0][2] = R_inv[0][2]
+        T[0][1][0] = R_inv[1][0]
+        T[0][1][1] = R_inv[1][1]
+        T[0][1][2] = R_inv[1][2]
+        T[0][2][0] = R_inv[2][0]
+        T[0][2][1] = R_inv[2][1]
+        T[0][2][2] = R_inv[2][2]
 
         images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
         image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
-        imsave(filename_ref, image)
-        imshow(image)
+        #imsave(filename_ref, image)
+        #imshow(image)
 
-        #depth = model.renderer.render_depth(T, model.vertices, model.faces)
-        #depth = depth.detach().cpu().numpy()[0]
-        #np.savetxt('depth.txt', depth, delimiter = ' ')
+        depth = model.renderer.render_depth(T, model.vertices, model.faces)
+        depth = depth.detach().cpu().numpy()[0]
+        np.savetxt('depth.txt', depth, delimiter = ' ')
 
 
 def main():
