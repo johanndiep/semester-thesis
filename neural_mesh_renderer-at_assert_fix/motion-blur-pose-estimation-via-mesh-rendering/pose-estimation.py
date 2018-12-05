@@ -187,7 +187,7 @@ class MeshGeneration(CameraParameter):
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
         zz = torch.ones_like(xx)
 
-        xx, yy, zz = absolute_mesh = self.absolute_mesh(xx, yy, zz)
+        xx, yy, zz = self.absolute_mesh(xx, yy, zz)
 
         pointcloud_ray = torch.stack([xx, yy, zz], dim=-1)
         pointcloud_ray = pointcloud_ray.view(-1, 3)
@@ -214,15 +214,19 @@ class MeshGeneration(CameraParameter):
 
         return xx, yy, zz
 
-    def make_reference_image(self, filename_ref, pointcloud_ray, faces):
+    def get_depth_image(self, filename_ref, pointcloud_ray, faces):
         model = Model(pointcloud_ray, faces)
         model.cuda()
 
-        cons_quat = self.start_quat * self.cam_quat
+        render_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
+        render_quat = Quaternion(render_pose[:4])
+        render_tran = render_pose[4:] 
+
+        cons_quat = render_quat * self.cam_quat
         cons_quat_inv = cons_quat.inverse
         R_inv = cons_quat_inv.rotation_matrix
 
-        start_tran_res = self.start_tran.reshape(3,1)
+        start_tran_res = render_tran.reshape(3,1)
         tran_inv = np.matmul(-R_inv, start_tran_res)
 
         T = torch.ones(3,4).unsqueeze(dim = 0)
@@ -243,12 +247,32 @@ class MeshGeneration(CameraParameter):
 
         images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
         image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
-        #imsave(filename_ref, image)
-        #imshow(image)
+        imsave(filename_ref, image)
+        imshow(image)
 
         depth = model.renderer.render_depth(T, model.vertices, model.faces)
         depth = depth.detach().cpu().numpy()[0]
-        np.savetxt('depth.txt', depth, delimiter = ' ')
+        # np.savetxt('depth.txt', depth, delimiter = ' ')
+        return depth
+
+class ImageGeneration(nn.Module, CameraParameter):
+    def warp_image(self, T_cur2ref, depth_cur, img_ref):
+        x = torch.arange(0, self.img_size_x, 1).float().cuda()
+        y = torch.arange(0, self.img_size_y, 1).float().cuda()
+
+        x_ = (x - self.K[0][2]) / self.K[0][0]
+        y_ = (y - self.K[1][2]) / self.K[1][1]
+
+        xx = x_.repeat(self.img_size_y, 1)
+        yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
+
+        xxx = xx[None, :, :] * depth_cur
+        yyy = yy[None, :, :] * depth_cur
+        zzz = depth_cur
+
+        p3d_cur = torch.stack([xxx, yyy, zzz], dim = -1)
+        Ones = torch.ones_like(p3d_cur[:, :, :, 0]).unsqueeze(dim=-1)
+        p3d_cur = torch.cat([p3d_cur, Ones], dim=-1)
 
 
 def main():
@@ -257,7 +281,7 @@ def main():
     parser.add_argument('-io', '--filename_obj', type=str, default=os.path.join(data_dir, 'room_mesh.obj'))
     parser.add_argument('-ir', '--filename_ref', type=str, default=os.path.join(data_dir, 'example5_ref.png'))
     parser.add_argument('-or', '--filename_output', type=str, default=os.path.join(data_dir, 'example5_result.gif'))
-    parser.add_argument('-mri', '--make_reference_image', type = int, default = 1)
+    parser.add_argument('-mri', '--test', type = int, default = 1)
     parser.add_argument('-g', '--gpu', type=int, default=1)
     args = parser.parse_args()
 
@@ -270,8 +294,11 @@ def main():
     np.savetxt('pointcloud.txt', pointcloud_ray)
     meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    if args.make_reference_image:
-        room_mesh.make_reference_image(args.filename_ref, pointcloud_ray, faces)
+    test_image = ImageGeneration()
+
+    if args.test:
+        depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
+
 
     # model = Model(pointcloud_ray, faces, args.filename_ref)
     # model.cuda()
