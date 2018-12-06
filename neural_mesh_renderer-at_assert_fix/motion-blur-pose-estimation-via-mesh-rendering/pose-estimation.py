@@ -256,7 +256,29 @@ class MeshGeneration(CameraParameter):
         return depth
 
 class ImageGeneration(nn.Module, CameraParameter):
-    def warp_image(self, T_cur2ref, depth_cur, img_ref):
+    def warp_image(self):
+
+        cur_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
+        ref_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+
+        cur_quat = Quaternion(cur_pose[:4]) * self.cam_quat
+        ref_quat = Quaternion(ref_pose[:4]) * self.cam_quat
+
+        cur_tran = cur_pose[4:]
+        ref_tran = ref_pose[4:]
+
+        T_cur2W = np.random.rand(4,4)
+        T_cur2W[:3, :3] = cur_quat.rotation_matrix
+        T_cur2W[:3, 3] = cur_tran
+        T_cur2W[3, :3] = 0
+        T_cur2W[3, 3] = 1
+
+        T_ref2W = np.random.rand(4,4)
+        T_ref2W[:3, :3] = ref_quat.rotation_matrix
+        T_ref2W[:3, 3] = ref_tran
+        T_ref2W[3, :3] = 0
+        T_ref2W[3, 3] = 1
+
         x = torch.arange(0, self.img_size_x, 1).float().cuda()
         y = torch.arange(0, self.img_size_y, 1).float().cuda()
 
@@ -266,13 +288,20 @@ class ImageGeneration(nn.Module, CameraParameter):
         xx = x_.repeat(self.img_size_y, 1)
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
 
-        xxx = xx[None, :, :] * depth_cur
-        yyy = yy[None, :, :] * depth_cur
-        zzz = depth_cur
+        depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
+        depth_values = depth_df.values
+        depth_tensor = torch.tensor(depth_values).float().cuda()
 
-        p3d_cur = torch.stack([xxx, yyy, zzz], dim = -1)
+        zz = depth_tensor / torch.sqrt(xx ** 2 + yy ** 2 + 1)
+        xx = zz * xx
+        yy = zz * yy
+
+        p3d_cur = torch.stack([xx, yy, zz], dim=-1).unsqueeze(dim=0)
         Ones = torch.ones_like(p3d_cur[:, :, :, 0]).unsqueeze(dim=-1)
         p3d_cur = torch.cat([p3d_cur, Ones], dim=-1)
+        p3d_cur = p3d_cur.view(1, -1, 4)
+        p3d_cur = p3d_cur.transpose(2, 1)
+
 
 
 def main():
