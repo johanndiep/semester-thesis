@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tqdm
 from skimage.io import imsave, imread
+from skimage.viewer import ImageViewer
 from scipy.misc import imshow
 from pyquaternion import Quaternion
 
@@ -21,7 +22,7 @@ from pyquaternion import Quaternion
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map.csv'
-
+img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/1.png'
 
 class CameraParameter():
     def __init__(self):
@@ -255,8 +256,15 @@ class MeshGeneration(CameraParameter):
         # np.savetxt('depth.txt', depth, delimiter = ' ')
         return depth
 
-class ImageGeneration(nn.Module, CameraParameter):
-    def warp_image(self):
+class ImageGeneration(CameraParameter):
+    def __init__(self):
+        super(ImageGeneration, self).__init__() 
+
+    def reprojector(self):
+        img_ref = torch.tensor(imread(img_dir))
+        print(imread(img_dir).shape)
+        ImageViewer(imread(img_dir)).show()
+        img_ref = img_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
 
         cur_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
         ref_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
@@ -273,11 +281,14 @@ class ImageGeneration(nn.Module, CameraParameter):
         T_cur2W[3, :3] = 0
         T_cur2W[3, 3] = 1
 
-        T_ref2W = np.random.rand(4,4)
-        T_ref2W[:3, :3] = ref_quat.rotation_matrix
-        T_ref2W[:3, 3] = ref_tran
-        T_ref2W[3, :3] = 0
-        T_ref2W[3, 3] = 1
+        T_W2ref = np.random.rand(4,4)
+        T_W2ref[:3, :3] = ref_quat.inverse.rotation_matrix
+        ref_tran_inv = np.matmul(-T_W2ref[:3, :3], ref_tran)
+        T_W2ref[:3, 3] = ref_tran_inv
+        T_W2ref[3, :3] = 0
+        T_W2ref[3, 3] = 1
+
+        T_cur2ref = torch.tensor(np.matmul(T_W2ref, T_cur2W)).unsqueeze(dim = 0).cuda().float()
 
         x = torch.arange(0, self.img_size_x, 1).float().cuda()
         y = torch.arange(0, self.img_size_y, 1).float().cuda()
@@ -302,7 +313,26 @@ class ImageGeneration(nn.Module, CameraParameter):
         p3d_cur = p3d_cur.view(1, -1, 4)
         p3d_cur = p3d_cur.transpose(2, 1)
 
+        p3d_ref = T_cur2ref.bmm(p3d_cur)
+        p3d_ref = p3d_ref.transpose(2, 1)
 
+        z = p3d_ref[:, :, 2].unsqueeze(dim=-1)
+        xy1 = p3d_ref / z
+        xy1[:, :, 0] = xy1[:, :, 0] * self.K[0][0] + self.K[0][2]
+        xy1[:, :, 1] = xy1[:, :, 1] * self.K[1][1] + self.K[1][2]
+
+        X = 2.0 * (xy1[:, :, 0] - self.img_size_x * 0.5 + 0.5) / (self.img_size_x - 1.)
+        Y = 2.0 * (xy1[:, :, 1] - self.img_size_y * 0.5 + 0.5) / (self.img_size_y - 1.)
+
+        X = X.view(1, self.img_size_y, self.img_size_x)
+        Y = Y.view(1, self.img_size_y, self.img_size_x)
+        xy = torch.stack([X, Y], dim=-1)
+
+        sample_image = torch.nn.functional.grid_sample(img_ref, xy, padding_mode='zeros')
+        sample_image = sample_image.transpose(1,3).transpose(1,2)
+        sample_image = sample_image[0].cpu().numpy()
+        print(sample_image.shape)
+        ImageViewer(sample_image).show()
 
 def main():
     #print(sys.version)
@@ -318,16 +348,14 @@ def main():
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
     room_mesh = MeshGeneration()
-    pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
-
-    np.savetxt('pointcloud.txt', pointcloud_ray)
-    meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
-
     test_image = ImageGeneration()
 
     if args.test:
-        depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
-
+        #pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
+        #np.savetxt('pointcloud.txt', pointcloud_ray)
+        #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+        #depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
+        test_image.reprojector()
 
     # model = Model(pointcloud_ray, faces, args.filename_ref)
     # model.cuda()
