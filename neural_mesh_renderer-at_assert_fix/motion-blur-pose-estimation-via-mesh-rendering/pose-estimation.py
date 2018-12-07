@@ -1,6 +1,7 @@
 #Semester Thesis: Implementation of the Motion-blur Aware Camera-Pose Estimation Algorithm in Python via Mesh Rendering
 #Author: Johann Diep (jdiep@student.ethz.ch)
 
+# listing all necessary libraries
 import argparse
 import torch
 import torch.nn as nn
@@ -18,12 +19,13 @@ from skimage.viewer import ImageViewer
 from scipy.misc import imshow
 from pyquaternion import Quaternion
 
-
+# listing all paths for data retrieving and storage
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
-depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map.csv'
+depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map_2.csv'
 img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/1.png'
 
+# storing the camera parameters of the Realistic Rendering dataset
 class CameraParameter():
     def __init__(self):
         super(CameraParameter, self).__init__() 
@@ -45,6 +47,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:] 
 
+# pose calculation from Lie group to homogeneous transformation
 class PoseTransformation():
     def se3_exp(self, tangent):
         if tangent.dim() < 2:
@@ -130,7 +133,7 @@ class PoseTransformation():
 
         return Phi.squeeze_()
 
-
+# initializing the renderer
 class Model(CameraParameter, nn.Module, PoseTransformation):
     def __init__(self, vertices, faces, filename_ref = None):
         super(Model, self).__init__()
@@ -161,7 +164,7 @@ class Model(CameraParameter, nn.Module, PoseTransformation):
         loss = torch.sum((image - self.image_ref[None, :, :]) ** 2)
         return loss
 
-
+# generating a 3D mesh and depth images from specific poses
 class MeshGeneration(CameraParameter):
     def __init__(self):
         super(MeshGeneration, self).__init__()
@@ -256,18 +259,18 @@ class MeshGeneration(CameraParameter):
         # np.savetxt('depth.txt', depth, delimiter = ' ')
         return depth
 
+# generating reprojected and blurry images
 class ImageGeneration(CameraParameter):
     def __init__(self):
         super(ImageGeneration, self).__init__() 
 
     def reprojector(self):
         img_ref = torch.tensor(imread(img_dir))
-        print(imread(img_dir).shape)
         ImageViewer(imread(img_dir)).show()
         img_ref = img_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
 
-        cur_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
-        ref_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+        cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+        ref_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
 
         cur_quat = Quaternion(cur_pose[:4]) * self.cam_quat
         ref_quat = Quaternion(ref_pose[:4]) * self.cam_quat
@@ -321,6 +324,12 @@ class ImageGeneration(CameraParameter):
         xy1[:, :, 0] = xy1[:, :, 0] * self.K[0][0] + self.K[0][2]
         xy1[:, :, 1] = xy1[:, :, 1] * self.K[1][1] + self.K[1][2]
 
+        # for index in range(0, xy1.shape[1]):
+        #     if xy1[:, index, 0] < 0 or xy1[:, index, 0] > self.img_size_x-1:
+        #         xy1[:, index, 0] = 0
+        #     if xy1[:, index, 1] < 0 or xy1[:, index, 1] > self.img_size_y-1:
+        #         xy1[:, index, 1] = 0
+
         X = 2.0 * (xy1[:, :, 0] - self.img_size_x * 0.5 + 0.5) / (self.img_size_x - 1.)
         Y = 2.0 * (xy1[:, :, 1] - self.img_size_y * 0.5 + 0.5) / (self.img_size_y - 1.)
 
@@ -329,9 +338,9 @@ class ImageGeneration(CameraParameter):
         xy = torch.stack([X, Y], dim=-1)
 
         sample_image = torch.nn.functional.grid_sample(img_ref, xy, padding_mode='zeros')
+
         sample_image = sample_image.transpose(1,3).transpose(1,2)
-        sample_image = sample_image[0].cpu().numpy()
-        print(sample_image.shape)
+        sample_image = sample_image[0].cpu().numpy().astype(np.uint8)
         ImageViewer(sample_image).show()
 
 def main():
