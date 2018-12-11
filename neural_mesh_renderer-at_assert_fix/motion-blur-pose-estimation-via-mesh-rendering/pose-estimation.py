@@ -18,11 +18,12 @@ from skimage.io import imsave, imread
 from skimage.viewer import ImageViewer
 from scipy.misc import imshow
 from pyquaternion import Quaternion
+from skimage.transform import resize
 
 # listing all paths for data retrieving and storage
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
-depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map_2.csv'
+depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map_1.csv'
 img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/1.png'
 
 # storing the camera parameters of the Realistic Rendering dataset
@@ -30,10 +31,10 @@ class CameraParameter():
     def __init__(self):
         super(CameraParameter, self).__init__() 
 
-        self.K = torch.tensor([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
+        self.K = torch.tensor([[320., 0, 320.], [0., 320./0.75, 240./0.75], [0., 0., 1.]]).float().cuda()
 
         self.img_size_x = 640
-        self.img_size_y = 480
+        self.img_size_y = 480/0.75
 
         self.scale = 0
 
@@ -209,6 +210,7 @@ class MeshGeneration(CameraParameter):
 
         depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
         depth_values = depth_df.values
+        depth_values = resize(depth_values, (self.img_size_y, self.img_size_x))
 
         depth_tensor = torch.tensor(depth_values).float().cuda()
 
@@ -222,7 +224,7 @@ class MeshGeneration(CameraParameter):
         model = Model(pointcloud_ray, faces)
         model.cuda()
 
-        render_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
+        render_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         render_quat = Quaternion(render_pose[:4])
         render_tran = render_pose[4:] 
 
@@ -253,11 +255,13 @@ class MeshGeneration(CameraParameter):
         image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
         imsave(filename_ref, image)
         imshow(image)
+        print(image.shape)
 
         depth = model.renderer.render_depth(T, model.vertices, model.faces)
         depth = depth.detach().cpu().numpy()[0]
         # np.savetxt('depth.txt', depth, delimiter = ' ')
-        return depth
+        print(depth.shape)
+        #return depth
 
 # generating reprojected and blurry images
 class ImageGeneration(CameraParameter):
@@ -323,12 +327,7 @@ class ImageGeneration(CameraParameter):
         xy1 = p3d_ref / z
         xy1[:, :, 0] = xy1[:, :, 0] * self.K[0][0] + self.K[0][2]
         xy1[:, :, 1] = xy1[:, :, 1] * self.K[1][1] + self.K[1][2]
-
-        # for index in range(0, xy1.shape[1]):
-        #     if xy1[:, index, 0] < 0 or xy1[:, index, 0] > self.img_size_x-1:
-        #         xy1[:, index, 0] = 0
-        #     if xy1[:, index, 1] < 0 or xy1[:, index, 1] > self.img_size_y-1:
-        #         xy1[:, index, 1] = 0
+        print(xy1[:,:,0].shape)
 
         X = 2.0 * (xy1[:, :, 0] - self.img_size_x * 0.5 + 0.5) / (self.img_size_x - 1.)
         Y = 2.0 * (xy1[:, :, 1] - self.img_size_y * 0.5 + 0.5) / (self.img_size_y - 1.)
@@ -342,6 +341,9 @@ class ImageGeneration(CameraParameter):
         sample_image = sample_image.transpose(1,3).transpose(1,2)
         sample_image = sample_image[0].cpu().numpy().astype(np.uint8)
         ImageViewer(sample_image).show()
+
+    def blurrer(self):
+        pass
 
 def main():
     #print(sys.version)
@@ -360,11 +362,11 @@ def main():
     test_image = ImageGeneration()
 
     if args.test:
-        #pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
-        #np.savetxt('pointcloud.txt', pointcloud_ray)
+        pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
+        np.savetxt('pointcloud.txt', pointcloud_ray)
         #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
-        #depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
-        test_image.reprojector()
+        #room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
+        #test_image.reprojector()
 
     # model = Model(pointcloud_ray, faces, args.filename_ref)
     # model.cuda()
