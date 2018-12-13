@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import tqdm
 from skimage.io import imsave, imread
 from skimage.viewer import ImageViewer
-#from scipy.misc import imshow
+from scipy.misc import imshow
 from pyquaternion import Quaternion
 from skimage.transform import resize
 
@@ -226,7 +226,7 @@ class MeshGeneration(CameraParameter):
         model = Model(pointcloud_ray, faces)
         model.cuda()
 
-        render_pose = np.array([0.983073, 0.0161678, 0.104372, -0.149706, -1.08935, 0.478454, 0.91156])
+        render_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         render_quat = Quaternion(render_pose[:4])
         render_tran = render_pose[4:] 
 
@@ -277,7 +277,7 @@ class ImageGeneration(CameraParameter):
         ImageViewer(imread(img_dir)).show()
         img_ref = img_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
 
-        cur_pose = np.array([0.983073, 0.0161678, 0.104372, -0.149706, -1.08935, 0.478454, 0.91156])
+        cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         ref_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
 
         cur_quat = Quaternion(cur_pose[:4]) * self.cam_quat
