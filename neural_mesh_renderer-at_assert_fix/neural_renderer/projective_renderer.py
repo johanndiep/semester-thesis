@@ -7,7 +7,7 @@ import numpy
 import neural_renderer as nr
 
 class ProjectiveRenderer(nn.Module):
-    def __init__(self, image_size=[256, 256], anti_aliasing=False, background_color=[0,0,0],
+    def __init__(self, image_size=256, anti_aliasing=False, background_color=[0,0,0],
                  fill_back=False,
                  dist_coeffs=None, K=None,
                  near=0.1, far=100,
@@ -24,7 +24,7 @@ class ProjectiveRenderer(nn.Module):
         super(ProjectiveRenderer, self).__init__()
 
         # rendering
-        self.image_size = torch.unsqueeze(torch.tensor([image_size[0], image_size[1]]).cuda(), 0)
+        self.image_size = torch.unsqueeze(torch.tensor([image_size, image_size]).cuda(), 0)
         self.anti_aliasing = anti_aliasing
         self.background_color = background_color
         self.fill_back = fill_back

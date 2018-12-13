@@ -88,7 +88,7 @@ std::vector<at::Tensor> forward_face_index_map(
     CHECK_INPUT(face_inv_map);
     CHECK_INPUT(faces_inv);
 
-    std::cout << "16" << std::endl;
+    //std::cout << "16" << std::endl;
 
     return forward_face_index_map_cuda(faces, face_index_map, weight_map,
                                        depth_map, face_inv_map, faces_inv,
@@ -117,7 +117,7 @@ std::vector<at::Tensor> forward_texture_sampling(
     CHECK_INPUT(sampling_index_map);
     CHECK_INPUT(sampling_weight_map);
 
-    std::cout << "17" << std::endl;
+    //std::cout << "17" << std::endl;
 
     return forward_texture_sampling_cuda(faces, textures, face_index_map,
                                     weight_map, depth_map, rgb_map,
@@ -146,7 +146,7 @@ at::Tensor backward_pixel_map(
     CHECK_INPUT(grad_alpha_map);
     CHECK_INPUT(grad_faces);
 
-    std::cout << "18" << std::endl;
+    //std::cout << "18" << std::endl;
 
     return backward_pixel_map_cuda(faces, face_index_map, rgb_map, alpha_map,
                                    grad_rgb_map, grad_alpha_map, grad_faces,
@@ -167,7 +167,7 @@ at::Tensor backward_textures(
     CHECK_INPUT(grad_rgb_map);
     CHECK_INPUT(grad_textures);
 
-    std::cout << "19" << std::endl;
+    //std::cout << "19" << std::endl;
 
     return backward_textures_cuda(face_index_map, sampling_weight_map,
                                   sampling_index_map, grad_rgb_map,
@@ -192,7 +192,7 @@ at::Tensor backward_depth_map(
     CHECK_INPUT(grad_depth_map);
     CHECK_INPUT(grad_faces);
 
-    std::cout << "20" << std::endl;
+    //std::cout << "20" << std::endl;
 
     return backward_depth_map_cuda(faces, depth_map, face_index_map,
                                    face_inv_map, weight_map,

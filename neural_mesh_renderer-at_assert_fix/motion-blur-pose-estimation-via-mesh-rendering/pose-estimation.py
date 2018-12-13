@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import tqdm
 from skimage.io import imsave, imread
 from skimage.viewer import ImageViewer
-from scipy.misc import imshow
+#from scipy.misc import imshow
 from pyquaternion import Quaternion
 from skimage.transform import resize
 
@@ -24,17 +24,18 @@ from skimage.transform import resize
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map_1.csv'
-img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/1.png'
+img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/2.png'
+
 
 # storing the camera parameters of the Realistic Rendering dataset
 class CameraParameter():
     def __init__(self):
         super(CameraParameter, self).__init__() 
 
-        self.K = torch.tensor([[320., 0, 320.], [0., 320./0.75, 240./0.75], [0., 0., 1.]]).float().cuda()
+        self.K = torch.tensor([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]).float().cuda()
 
         self.img_size_x = 640
-        self.img_size_y = 480/0.75
+        self.img_size_y = 480
 
         self.scale = 0
 
@@ -47,6 +48,7 @@ class CameraParameter():
         cam_pose = np.array([0.5, -0.5, 0.5, -0.5, 0, 0, 0])
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:] 
+
 
 # pose calculation from Lie group to homogeneous transformation
 class PoseTransformation():
@@ -149,8 +151,7 @@ class Model(CameraParameter, nn.Module, PoseTransformation):
         K = self.K
         K = torch.unsqueeze(K, 0)
 
-        renderer = nr.ProjectiveRenderer(image_size = [self.img_size_x, self.img_size_y],
-                                                       K = K)
+        renderer = nr.ProjectiveRenderer(image_size = self.img_size_x, K = K)
         self.renderer = renderer
 
         if filename_ref != None:
@@ -164,6 +165,7 @@ class Model(CameraParameter, nn.Module, PoseTransformation):
         image = self.renderer(M, self.vertices, self.faces, mode = 'silhouettes')
         loss = torch.sum((image - self.image_ref[None, :, :]) ** 2)
         return loss
+
 
 # generating a 3D mesh and depth images from specific poses
 class MeshGeneration(CameraParameter):
@@ -210,7 +212,7 @@ class MeshGeneration(CameraParameter):
 
         depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
         depth_values = depth_df.values
-        depth_values = resize(depth_values, (self.img_size_y, self.img_size_x))
+        depth_values = resize(depth_values, (self.img_size_y, self.img_size_x), mode = 'constant')
 
         depth_tensor = torch.tensor(depth_values).float().cuda()
 
@@ -251,24 +253,26 @@ class MeshGeneration(CameraParameter):
         T[0][2][1] = R_inv[2][1]
         T[0][2][2] = R_inv[2][2]
 
-        images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
-        image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)
-        imsave(filename_ref, image)
-        imshow(image)
-        print(image.shape)
+        #images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
+        #image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.img_size_y, :, :]
+        #imsave(filename_ref, image)
+        #imshow(image)
 
         depth = model.renderer.render_depth(T, model.vertices, model.faces)
-        depth = depth.detach().cpu().numpy()[0]
+        depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
+        #plt.imshow(depth)
+        #plt.show()
         # np.savetxt('depth.txt', depth, delimiter = ' ')
-        print(depth.shape)
-        #return depth
+        
+        return depth
+
 
 # generating reprojected and blurry images
 class ImageGeneration(CameraParameter):
     def __init__(self):
         super(ImageGeneration, self).__init__() 
 
-    def reprojector(self):
+    def reprojector(self, depth):
         img_ref = torch.tensor(imread(img_dir))
         ImageViewer(imread(img_dir)).show()
         img_ref = img_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
@@ -295,7 +299,7 @@ class ImageGeneration(CameraParameter):
         T_W2ref[3, :3] = 0
         T_W2ref[3, 3] = 1
 
-        T_cur2ref = torch.tensor(np.matmul(T_W2ref, T_cur2W)).unsqueeze(dim = 0).cuda().float()
+        #T_cur2ref = torch.tensor(np.matmul(T_W2ref, T_cur2W)).unsqueeze(dim = 0).cuda().float()
 
         x = torch.arange(0, self.img_size_x, 1).float().cuda()
         y = torch.arange(0, self.img_size_y, 1).float().cuda()
@@ -306,11 +310,14 @@ class ImageGeneration(CameraParameter):
         xx = x_.repeat(self.img_size_y, 1)
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
 
-        depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
-        depth_values = depth_df.values
-        depth_tensor = torch.tensor(depth_values).float().cuda()
+        #depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
+        #depth_values = depth_df.values
+        #depth_tensor = torch.tensor(depth_values).float().cuda()
+
+        depth_tensor = torch.tensor(depth).float().cuda()
 
         zz = depth_tensor / torch.sqrt(xx ** 2 + yy ** 2 + 1)
+        #zz = depth_tensor
         xx = zz * xx
         yy = zz * yy
 
@@ -320,6 +327,8 @@ class ImageGeneration(CameraParameter):
         p3d_cur = p3d_cur.view(1, -1, 4)
         p3d_cur = p3d_cur.transpose(2, 1)
 
+        T_cur2ref = torch.ones([4, 4]).unsqueeze(dim = 0).cuda().float()
+
         p3d_ref = T_cur2ref.bmm(p3d_cur)
         p3d_ref = p3d_ref.transpose(2, 1)
 
@@ -327,7 +336,6 @@ class ImageGeneration(CameraParameter):
         xy1 = p3d_ref / z
         xy1[:, :, 0] = xy1[:, :, 0] * self.K[0][0] + self.K[0][2]
         xy1[:, :, 1] = xy1[:, :, 1] * self.K[1][1] + self.K[1][2]
-        print(xy1[:,:,0].shape)
 
         X = 2.0 * (xy1[:, :, 0] - self.img_size_x * 0.5 + 0.5) / (self.img_size_x - 1.)
         Y = 2.0 * (xy1[:, :, 1] - self.img_size_y * 0.5 + 0.5) / (self.img_size_y - 1.)
@@ -345,6 +353,7 @@ class ImageGeneration(CameraParameter):
     def blurrer(self):
         pass
 
+
 def main():
     #print(sys.version)
     parser = argparse.ArgumentParser()
@@ -358,15 +367,18 @@ def main():
     if args.gpu > 0:
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
+    # initializing class objects
     room_mesh = MeshGeneration()
     test_image = ImageGeneration()
 
+    # testing
     if args.test:
         pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
-        np.savetxt('pointcloud.txt', pointcloud_ray)
+        #np.savetxt('pointcloud.txt', pointcloud_ray)
         #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
-        #room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
-        #test_image.reprojector()
+        
+        depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
+        test_image.reprojector(depth)
 
     # model = Model(pointcloud_ray, faces, args.filename_ref)
     # model.cuda()
