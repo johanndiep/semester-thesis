@@ -47,11 +47,19 @@ class CameraParameter():
         
         cam_pose = np.array([0.5, -0.5, 0.5, -0.5, 0, 0, 0])
         self.cam_quat = Quaternion(cam_pose[:4])
-        self.cam_tran = cam_pose[4:] 
+        self.cam_tran = cam_pose[4:]
+
+        self.N_poses = 10
+        self.t_exp = 0.04
+        self.t_int = 0.1
 
 
 # pose calculation from Lie group to homogeneous transformation
 class PoseTransformation():
+    def __init__(self):
+        cam_pose = np.array([0.5, -0.5, 0.5, -0.5, 0, 0, 0])
+        self.cam_quat = Quaternion(cam_pose[:4])
+
     def se3_exp(self, tangent):
         if tangent.dim() < 2:
             tangent = tangent.unsqueeze(dim = 0)
@@ -135,6 +143,25 @@ class PoseTransformation():
         Phi[:, 2, 1] = phi[:, 0]
 
         return Phi.squeeze_()
+
+    def get_spline_pose(self, t):
+        pass
+
+    def from_SE3t_to_se3u(self, q, t):
+        quat = Quaternion(q[:4]) * self.cam_quat
+        
+        axis = torch.tensor(quat.axis).float().unsqueeze(dim = 0)
+        angle = torch.tensor([quat.angle]).unsqueeze(dim = 0)
+
+        A = angle.sin() / angle
+        B = (1 - angle.cos()) / (angle * angle)
+
+        C = 1 / (angle * angle) *  (1 - A / (2 * B))
+
+        V_inverse = torch.eye(3).unsqueeze(dim = 0) - 0.5 * self.wedge(axis) + C * torch.bmm(self.wedge(axis).unsqueeze(dim = 0), self.wedge(axis).unsqueeze(dim = 0))
+
+        print(V_inverse)
+
 
 # initializing the renderer
 class Model(CameraParameter, nn.Module, PoseTransformation):
@@ -349,7 +376,13 @@ class ImageGeneration(CameraParameter):
         ImageViewer(sample_image).show()
 
     def blurrer(self):
-        pass
+        warped_images = None
+
+        ref_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
+        cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+
+        ref_tran = ref_pose[4:]
+        cur_tran = cur_pose[4:]           
 
 
 def main():
@@ -368,15 +401,19 @@ def main():
     # initializing class objects
     room_mesh = MeshGeneration()
     test_image = ImageGeneration()
+    math = PoseTransformation()
 
     # testing
     if args.test:
-        pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
+        #pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
         #np.savetxt('pointcloud.txt', pointcloud_ray)
         #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
         
-        depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
-        test_image.reprojector(depth)
+        #depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
+        #test_image.reprojector(depth)
+        #test_image.blurrer()
+
+        math.from_SE3t_to_se3u([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
 
     # model = Model(pointcloud_ray, faces, args.filename_ref)
     # model.cuda()
