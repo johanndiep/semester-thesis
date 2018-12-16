@@ -147,7 +147,7 @@ class PoseTransformation():
     def get_spline_pose(self, t):
         pass
 
-    def from_SE3t_to_se3u(self, q, t):
+    def from_SE3t_to_se3u(self, q):
         quat = Quaternion(q[:4]) * self.cam_quat
         
         axis = torch.tensor(quat.axis).float().unsqueeze(dim = 0)
@@ -160,7 +160,7 @@ class PoseTransformation():
 
         V_inverse = torch.eye(3).unsqueeze(dim = 0) - 0.5 * self.wedge(axis) + C * torch.bmm(self.wedge(axis).unsqueeze(dim = 0), self.wedge(axis).unsqueeze(dim = 0))
 
-        print(V_inverse)
+        return torch.bmm(V_inverse, t)
 
 
 # initializing the renderer
@@ -249,11 +249,11 @@ class MeshGeneration(CameraParameter):
 
         return xx, yy, zz
 
-    def get_depth_image(self, filename_ref, pointcloud_ray, faces):
+    def get_depth_image(self, pointcloud_ray, faces, render_pose):
         model = Model(pointcloud_ray, faces)
         model.cuda()
 
-        render_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+        #render_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         render_quat = Quaternion(render_pose[:4])
         render_tran = render_pose[4:] 
 
@@ -280,22 +280,22 @@ class MeshGeneration(CameraParameter):
         T[0][2][1] = R_inv[2][1]
         T[0][2][2] = R_inv[2][2]
 
-        #images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
-        #image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.img_size_y, :, :]
+        images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
+        image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.img_size_y, :, :]
         #imsave(filename_ref, image)
-        #imshow(image)
+        imshow(image)
 
-        depth = model.renderer.render_depth(T, model.vertices, model.faces)
-        depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
+        #depth = model.renderer.render_depth(T, model.vertices, model.faces)
+        #depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
         #plt.imshow(depth)
         #plt.show()
         # np.savetxt('depth.txt', depth, delimiter = ' ')
         
-        return depth
+        #return depth
 
 
 # generating reprojected and blurry images
-class ImageGeneration(CameraParameter):
+class ImageGeneration(MeshGeneration):
     def __init__(self):
         super(ImageGeneration, self).__init__() 
 
@@ -375,15 +375,34 @@ class ImageGeneration(CameraParameter):
         sample_image = sample_image[0].cpu().numpy().astype(np.uint8)
         ImageViewer(sample_image).show()
 
-    def blurrer(self):
+    def blurrer(self, pointcloud_ray, faces):
         warped_images = None
 
         ref_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
         cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
 
         ref_tran = ref_pose[4:]
-        cur_tran = cur_pose[4:]           
+        cur_tran = cur_pose[4:]       
 
+        ref_rot = Quaternion(ref_pose[:4])
+        ref_rot = ref_rot.axis * ref_rot.angle
+        cur_rot = Quaternion(cur_pose[:4])
+        cur_rot = cur_rot.axis * cur_rot.angle
+
+        s = 0.5
+        inter_tran = ref_tran - s * (ref_tran - cur_tran)
+        inter_rot = np.array(ref_rot - s * (ref_rot - cur_rot))
+
+        inter_rot_angle = np.linalg.norm(inter_rot)
+        inter_rot_axis = inter_rot / inter_rot_angle
+
+        inter_pose = np.ones(7)
+        inter_pose_quat = Quaternion(axis = inter_rot_axis, angle = inter_rot_angle)
+        inter_pose[0] = inter_pose_quat.real
+        inter_pose[1:4] = inter_pose_quat.imaginary
+        inter_pose[4:] = inter_tran
+
+        depth = self.get_depth_image(pointcloud_ray, faces, inter_pose)
 
 def main():
     #print(sys.version)
@@ -405,15 +424,15 @@ def main():
 
     # testing
     if args.test:
-        #pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
+        pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
         #np.savetxt('pointcloud.txt', pointcloud_ray)
         #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
         
         #depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
         #test_image.reprojector(depth)
-        #test_image.blurrer()
+        test_image.blurrer(pointcloud_ray, faces)
 
-        math.from_SE3t_to_se3u([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
+        #math.from_SE3t_to_se3u([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
 
     # model = Model(pointcloud_ray, faces, args.filename_ref)
     # model.cuda()
