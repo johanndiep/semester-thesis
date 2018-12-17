@@ -37,7 +37,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 0
+        self.scale = 1
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda()
 
@@ -49,7 +49,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 10
+        self.N_poses = 15
         self.t_exp = 0.04
         self.t_int = 0.1
 
@@ -200,25 +200,25 @@ class MeshGeneration(CameraParameter):
         super(MeshGeneration, self).__init__()
 
         self.scale_power = 2 ** self.scale
-        self.K = self.K / self.scale_power
+        self.K_scaled = self.K / self.scale_power
 
-        self.img_size_x = int(self.img_size_x // self.scale_power)
-        self.img_size_y = int(self.img_size_y // self.scale_power)
+        self.img_size_x_scaled = int(self.img_size_x // self.scale_power)
+        self.img_size_y_scaled = int(self.img_size_y // self.scale_power)
 
     def generate_mean_mesh(self):
         _, faces = meshzoo.rectangle(xmin = -1, xmax = 1,
                                      ymin = -1, ymax = 1.,
-                                     nx = self.img_size_x, ny = self.img_size_y,
+                                     nx = self.img_size_x_scaled, ny = self.img_size_y_scaled,
                                      zigzag = True)
 
-        x = torch.arange(0, self.img_size_x, 1).float().cuda()
-        y = torch.arange(0, self.img_size_y, 1).float().cuda()
+        x = torch.arange(0, self.img_size_x_scaled, 1).float().cuda()
+        y = torch.arange(0, self.img_size_y_scaled, 1).float().cuda()
 
-        x_ = (x - self.K[0][2]) / self.K[0][0]
-        y_ = (y - self.K[1][2]) / self.K[1][1]
+        x_ = (x - self.K_scaled[0][2]) / self.K_scaled[0][0]
+        y_ = (y - self.K_scaled[1][2]) / self.K_scaled[1][1]
 
-        xx = x_.repeat(self.img_size_y, 1)
-        yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
+        xx = x_.repeat(self.img_size_y_scaled, 1)
+        yy = y_.view(self.img_size_y_scaled, 1).repeat(1, self.img_size_x_scaled)
         zz = torch.ones_like(xx)
 
         xx, yy, zz = self.absolute_mesh(xx, yy, zz)
@@ -239,7 +239,7 @@ class MeshGeneration(CameraParameter):
 
         depth_df = pd.read_csv(depth_dir, sep = '\s+', header = None)
         depth_values = depth_df.values
-        depth_values = resize(depth_values, (self.img_size_y, self.img_size_x), mode = 'constant')
+        depth_values = resize(depth_values, (self.img_size_y_scaled, self.img_size_x_scaled), mode = 'constant')
 
         depth_tensor = torch.tensor(depth_values).float().cuda()
 
@@ -441,8 +441,8 @@ def main():
     # testing
     if args.test:
         pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
-        #np.savetxt('pointcloud.txt', pointcloud_ray)
-        #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+        np.savetxt('pointcloud.txt', pointcloud_ray)
+        meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
         
         #depth = room_mesh.get_depth_image(args.filename_ref, pointcloud_ray, faces)
         #test_image.reprojector(depth)
