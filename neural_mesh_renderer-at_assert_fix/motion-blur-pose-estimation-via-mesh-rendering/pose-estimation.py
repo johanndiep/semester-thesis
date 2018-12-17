@@ -280,18 +280,18 @@ class MeshGeneration(CameraParameter):
         T[0][2][1] = R_inv[2][1]
         T[0][2][2] = R_inv[2][2]
 
-        images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
-        image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.img_size_y, :, :]
+        #images = model.renderer(T, model.vertices, model.faces, torch.tanh(model.textures))
+        #image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.img_size_y, :, :]
         #imsave(filename_ref, image)
-        imshow(image)
+        #imshow(image)
 
-        #depth = model.renderer.render_depth(T, model.vertices, model.faces)
-        #depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
+        depth = model.renderer.render_depth(T, model.vertices, model.faces)
+        depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
         #plt.imshow(depth)
         #plt.show()
         # np.savetxt('depth.txt', depth, delimiter = ' ')
         
-        #return depth
+        return depth
 
 
 # generating reprojected and blurry images
@@ -299,12 +299,12 @@ class ImageGeneration(MeshGeneration):
     def __init__(self):
         super(ImageGeneration, self).__init__() 
 
-    def reprojector(self, depth):
+    def reprojector(self, depth, cur_pose):
         img_ref = torch.tensor(imread(img_dir))
-        ImageViewer(imread(img_dir)).show()
+        #ImageViewer(imread(img_dir)).show()
         img_ref = img_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
 
-        cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+        #cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         ref_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
 
         cur_quat = Quaternion(cur_pose[:4]) * self.cam_quat
@@ -373,7 +373,9 @@ class ImageGeneration(MeshGeneration):
 
         sample_image = sample_image.transpose(1,3).transpose(1,2)
         sample_image = sample_image[0].cpu().numpy().astype(np.uint8)
-        ImageViewer(sample_image).show()
+        #ImageViewer(sample_image).show()
+
+        return sample_image
 
     def blurrer(self, pointcloud_ray, faces):
         warped_images = None
@@ -389,20 +391,34 @@ class ImageGeneration(MeshGeneration):
         cur_rot = Quaternion(cur_pose[:4])
         cur_rot = cur_rot.axis * cur_rot.angle
 
-        s = 0.5
-        inter_tran = ref_tran - s * (ref_tran - cur_tran)
-        inter_rot = np.array(ref_rot - s * (ref_rot - cur_rot))
+        for i in range(1, self.N_poses + 1):
+            t_i = 0.2 - self.t_exp + (i - 1) * self.t_exp / (self.N_poses - 1)
+            s = (t_i - 0.1) / 0.1
 
-        inter_rot_angle = np.linalg.norm(inter_rot)
-        inter_rot_axis = inter_rot / inter_rot_angle
+            inter_tran = ref_tran - s * (ref_tran - cur_tran)
+            inter_rot = np.array(ref_rot - s * (ref_rot - cur_rot))
 
-        inter_pose = np.ones(7)
-        inter_pose_quat = Quaternion(axis = inter_rot_axis, angle = inter_rot_angle)
-        inter_pose[0] = inter_pose_quat.real
-        inter_pose[1:4] = inter_pose_quat.imaginary
-        inter_pose[4:] = inter_tran
+            inter_rot_angle = np.linalg.norm(inter_rot)
+            inter_rot_axis = inter_rot / inter_rot_angle
 
-        depth = self.get_depth_image(pointcloud_ray, faces, inter_pose)
+            inter_pose = np.ones(7)
+            inter_pose_quat = Quaternion(axis = inter_rot_axis, angle = inter_rot_angle)
+            inter_pose[0] = inter_pose_quat.real
+            inter_pose[1:4] = inter_pose_quat.imaginary
+            inter_pose[4:] = inter_tran
+
+            depth = self.get_depth_image(pointcloud_ray, faces, inter_pose)
+
+            image = torch.tensor(self.reprojector(depth, inter_pose)).cuda().float()
+
+            if i == 1:
+                warped_images = image.unsqueeze(-1)
+            else:
+                warped_images = torch.cat([warped_images, image.unsqueeze(-1)], -1)
+
+        blur_image = torch.mean(warped_images, -1)
+        blur_image = blur_image.cpu().numpy().astype(np.uint8)
+        ImageViewer(blur_image).show()
 
 def main():
     #print(sys.version)
