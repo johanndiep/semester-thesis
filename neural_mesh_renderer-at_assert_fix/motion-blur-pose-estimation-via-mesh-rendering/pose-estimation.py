@@ -49,7 +49,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 15
+        self.N_poses = 20
         self.t_exp = 0.04
         self.t_int = 0.1
 
