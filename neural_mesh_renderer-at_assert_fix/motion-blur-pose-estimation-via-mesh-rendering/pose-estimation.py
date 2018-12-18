@@ -41,7 +41,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 1 # scaling factor for downsizing
+        self.scale = 5 # scaling factor for downsizing
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
 
@@ -51,7 +51,7 @@ class CameraParameter():
         self.start_tran = self.start_pose[4:]
 
         # current pose information
-        self.cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+        #self.cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         self.cur_timestamp = 0.2
 
         # texture parameter
@@ -62,7 +62,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 5 # number of reprojection poses during blurring
+        self.N_poses = 2 # number of reprojection poses during blurring
         self.t_exp = 0.04 # exposure time
         self.t_int = 0.1 # time interval between two consecutive image-frames
 
@@ -402,21 +402,21 @@ class ImageGeneration(MeshGeneration):
 
         return sample_image # return the reprojected image
 
-    def blurrer(self, pointcloud_ray, faces):
+    def blurrer(self, pointcloud_ray, faces, init_pose):
         warped_images = None # initializing variable for the warped-images
 
         # defining reference and current pose
         ref_pose = self.start_pose
-        cur_pose = self.cur_pose
+        cur_pose = init_pose
 
         # extracting translation part
         ref_tran = ref_pose[4:]
-        cur_tran = cur_pose[4:]       
+        cur_tran = cur_pose[4:].cpu().numpy()      
 
         # extracting orientation part
         ref_rot = Quaternion(ref_pose[:4])
         ref_rot = ref_rot.axis * ref_rot.angle
-        cur_rot = Quaternion(cur_pose[:4])
+        cur_rot = Quaternion(cur_pose[:4].cpu().numpy())
         cur_rot = cur_rot.axis * cur_rot.angle
 
         for i in range(1, self.N_poses + 1):
@@ -452,8 +452,6 @@ class ImageGeneration(MeshGeneration):
             else:
                 warped_images = torch.cat([warped_images, image.unsqueeze(-1)], -1)
 
-            print(i)
-
         blur_image = torch.mean(warped_images, -1) # taking mean to generate a blur-image
         
         # generating a grayscale-image from the RGB-image    
@@ -462,6 +460,11 @@ class ImageGeneration(MeshGeneration):
         ImageViewer(blur_image).show()
 
         return blur_image # returning the generated blur-image
+
+
+class Model():
+    def __init__(self):
+        pass
 
 def main():
     #print(sys.version)
@@ -474,6 +477,10 @@ def main():
     if args.gpu > 0:
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
+    # hyperparameters definitions
+    init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+    init_pose = torch.tensor(init_pose).cuda().float()
+
     # initializing class objects
     room_mesh = MeshGeneration()
     test_image = ImageGeneration()
@@ -484,7 +491,7 @@ def main():
         #np.savetxt('pointcloud.txt', pointcloud_ray)
         #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
         
-        blur_image = test_image.blurrer(pointcloud_ray, faces)
+        blur_image = test_image.blurrer(pointcloud_ray, faces, init_pose)
 
     print("Everything ok")
 
