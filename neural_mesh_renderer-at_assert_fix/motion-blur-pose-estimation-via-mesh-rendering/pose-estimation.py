@@ -188,6 +188,26 @@ class PoseTransformation():
 
         return torch.bmm(V_inverse, t.transpose(1,2)).squeeze_() # return se(3)-translation
 
+    def from_SE3rot_to_se3w(self, pose_SE3):
+        # reading and storing rotional elements
+        m_00 = pose_SE3[:,0,0]
+        m_11 = pose_SE3[:,1,1]
+        m_22 = pose_SE3[:,2,2]
+        m_01 = pose_SE3[:,0,1]
+        m_02 = pose_SE3[:,0,2]
+        m_10 = pose_SE3[:,1,0]
+        m_12 = pose_SE3[:,1,2]
+        m_20 = pose_SE3[:,2,0]
+        m_21 = pose_SE3[:,2,1]
+
+        # transforming rotational matrix to angle axis form
+        angle = ((m_00 + m_11 + m_22 -1) / 2).acos()
+        ax = (m_21 - m_12) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt()
+        ay = (m_02 - m_20) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt() 
+        az = (m_10 - m_01) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt()
+
+        return torch.cat([ax * angle, ay * angle, az * angle], dim = 0).unsqueeze(dim = 0) # return angle axis
+
 
 # initializing the renderer
 class Renderer(CameraParameter, nn.Module, PoseTransformation):
@@ -410,24 +430,26 @@ class ImageGeneration(MeshGeneration):
         cur_pose = init_pose
 
         # extracting translation part
-        ref_tran = ref_pose[4:]
-        cur_tran = cur_pose[4:].cpu().numpy()      
+        ref_tran = torch.tensor(ref_pose[4:]).cuda().float()
+        cur_tran = torch.tensor(cur_pose[4:]).cuda().float()  
 
         # extracting orientation part
         ref_rot = Quaternion(ref_pose[:4])
-        ref_rot = ref_rot.axis * ref_rot.angle
-        cur_rot = Quaternion(cur_pose[:4].cpu().numpy())
-        cur_rot = cur_rot.axis * cur_rot.angle
+        ref_rot = torch.tensor(ref_rot.axis * ref_rot.angle).cuda().float()
+        cur_rot = Quaternion(cur_pose[:4])
+        cur_rot = torch.tensor(cur_rot.axis * cur_rot.angle).cuda().float()
 
         for i in range(1, self.N_poses + 1):
-            
             # calculating the timesteps at which a reprojected image should be generated
             t_i = self.cur_timestamp - self.t_exp + (i - 1) * self.t_exp / (self.N_poses - 1)
             s = (t_i - self.t_int) / self.t_int
 
             # linearly interpolating translation and rotation
             inter_tran = ref_tran - s * (ref_tran - cur_tran)
-            inter_rot = np.array(ref_rot - s * (ref_rot - cur_rot))
+            inter_rot = ref_rot - s * (ref_rot - cur_rot)
+
+            print(inter_tran)
+            print(inter_rot)
 
             # transform into angle-axis
             inter_rot_angle = np.linalg.norm(inter_rot)
@@ -462,9 +484,31 @@ class ImageGeneration(MeshGeneration):
         return blur_image # returning the generated blur-image
 
 
-class Model():
-    def __init__(self):
-        pass
+class Model(PoseTransformation):
+    def __init__(self, init_pose):
+        super(Model, self).__init__() 
+
+        # reading quaternion and transforming it to angle axis form
+        init_pose_quat = Quaternion(init_pose[:4])
+        init_pose_aa = torch.tensor(init_pose_quat.axis * init_pose_quat.angle).cuda().float()
+        
+        # reading in translation in SE(3) and transforming it to se(3) form
+        init_pose_tran = init_pose[4:]
+        init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose[4:]))
+
+        # concatenating rotation and translation to tangent form, initializing parameter variable
+        self.pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0))
+
+    def forward(self):
+        pose_SE3 = self.se3_exp(self.pose_se3)
+        
+        pose_aa = self.from_SE3rot_to_se3w(pose_SE3)
+        pose_t  = pose_SE3[:,:,3]
+
+        print(pose_t)
+        print(pose_aa)
+
+
 
 def main():
     #print(sys.version)
@@ -479,19 +523,21 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    init_pose = torch.tensor(init_pose).cuda().float()
 
     # initializing class objects
     room_mesh = MeshGeneration()
     test_image = ImageGeneration()
+    model = Model(init_pose)
+    print(model.pose_se3)
+    model.forward()
 
     # testing
-    if args.test:
-        pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
+    #if args.test:
+        #pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
         #np.savetxt('pointcloud.txt', pointcloud_ray)
         #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
         
-        blur_image = test_image.blurrer(pointcloud_ray, faces, init_pose)
+        #blur_image = test_image.blurrer(pointcloud_ray, faces, init_pose)
 
     print("Everything ok")
 
