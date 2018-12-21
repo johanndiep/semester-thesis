@@ -160,6 +160,7 @@ class PoseTransformation():
 
         # return skew-matrix 
         Phi = phi.__class__(phi.shape[0], 3, 3)
+        Phi[0, :, :] = torch.zeros(3, 3)
         Phi[:, 0, 1] = -phi [:, 2]
         Phi[:, 1, 0] = phi[:, 2]
         Phi[:, 0, 2] = phi[:, 1]
@@ -430,7 +431,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
 
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
-        
+
         return sample_image[0, :, :, 0] # return the reprojected image
 
     def blurrer(self, pointcloud_ray, faces, init_pose):
@@ -532,19 +533,19 @@ def main():
     pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
 
     # save pointcloud and mesh option
-    # np.savetxt('pointcloud.txt', pointcloud_ray)
-    # meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+    #np.savetxt('pointcloud.txt', pointcloud_ray)
+    #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    #model.forward(image_generator, pointcloud_ray, faces)
+    model.forward(image_generator, pointcloud_ray, faces)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
+    # optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
 
-    for i in tqdm(range(10)):
-        optimizer.zero_grad()
+    # for i in tqdm(range(10)):
+    #     optimizer.zero_grad()
         
-        loss = model.forward(image_generator, pointcloud_ray, faces)
-        print(loss)
-        loss.backward()
+    #     loss = model.forward(image_generator, pointcloud_ray, faces)
+    #     print(loss)
+    #     loss.backward()
 
     print("Everything ok")
 
