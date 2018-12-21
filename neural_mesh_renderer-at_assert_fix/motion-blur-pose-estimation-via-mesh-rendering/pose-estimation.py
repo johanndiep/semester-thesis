@@ -21,13 +21,14 @@ from scipy.misc import imshow
 from pyquaternion import Quaternion
 from skimage.transform import resize
 
+
 # listing all paths for data retrieving and storage
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 
 depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map_1.csv' # used for 3D mesh generation
 img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/1.png' # used for image warping
-
+blur_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/blurred/cam0/2.png' # used as reference blurry image
 
 # storing the camera parameters of the Realistic Rendering dataset
 class CameraParameter():
@@ -51,7 +52,6 @@ class CameraParameter():
         self.start_tran = self.start_pose[4:]
 
         # current pose information
-        #self.cur_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
         self.cur_timestamp = 0.2
 
         # texture parameter
@@ -62,7 +62,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 5 # number of reprojection poses during blurring
+        self.N_poses = 2 # number of reprojection poses during blurring
         self.t_exp = 0.04 # exposure time
         self.t_int = 0.1 # time interval between two consecutive image-frames
 
@@ -188,17 +188,17 @@ class PoseTransformation():
 
         return torch.bmm(V_inverse, t.transpose(1,2)).squeeze_() # return se(3)-translation
 
-    def from_SE3rot_to_se3w(self, pose_SE3):
+    def from_SE3rot_to_se3w(self, r):
         # reading and storing rotional elements
-        m_00 = pose_SE3[:,0,0]
-        m_11 = pose_SE3[:,1,1]
-        m_22 = pose_SE3[:,2,2]
-        m_01 = pose_SE3[:,0,1]
-        m_02 = pose_SE3[:,0,2]
-        m_10 = pose_SE3[:,1,0]
-        m_12 = pose_SE3[:,1,2]
-        m_20 = pose_SE3[:,2,0]
-        m_21 = pose_SE3[:,2,1]
+        m_00 = r[:,0,0]
+        m_11 = r[:,1,1]
+        m_22 = r[:,2,2]
+        m_01 = r[:,0,1]
+        m_02 = r[:,0,2]
+        m_10 = r[:,1,0]
+        m_12 = r[:,1,2]
+        m_20 = r[:,2,0]
+        m_21 = r[:,2,1]
 
         # transforming rotational matrix to angle axis form
         angle = ((m_00 + m_11 + m_22 -1) / 2).acos()
@@ -428,11 +428,8 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
 
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
-        print(sample_image.shape)
-        sample_image = sample_image[0].detach().cpu().numpy().astype(np.uint8)
-        #ImageViewer(sample_image).show()
 
-        return sample_image # return the reprojected image
+        return sample_image[0] # return the reprojected image
 
     def blurrer(self, pointcloud_ray, faces, init_pose):
         warped_images = None # initializing variable for the warped-images
@@ -478,14 +475,14 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         blur_image = torch.mean(warped_images, -1) # taking mean to generate a blur-image
         
         # generating a grayscale-image from the RGB-image    
-        blur_image = blur_image.cpu().numpy().astype(np.uint8)
-        blur_image = cv2.cvtColor(blur_image, cv2.COLOR_BGR2GRAY)
-        ImageViewer(blur_image).show()
+        #blur_image = blur_image.detach().cpu().numpy().astype(np.uint8)
+        #lur_image = cv2.cvtColor(blur_image, cv2.COLOR_BGR2GRAY)
+        #ImageViewer(blur_image).show()
 
         return blur_image # returning the generated blur-image
 
 
-class Model(PoseTransformation):
+class Model(nn.Module, ImageGeneration):
     def __init__(self, init_pose):
         super(Model, self).__init__() 
 
@@ -500,14 +497,22 @@ class Model(PoseTransformation):
         # concatenating rotation and translation to tangent form, initializing parameter variable
         self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0))
 
-    def forward(self):
-        pass
+        blur_ref = imread(blur_dir).astype(np.uint8)
+        blur_ref = torch.tensor(blur_ref)
+        blur_ref = blur_ref.cpu().numpy().astype(np.uint8)
+        ImageViewer(blur_ref).show()
+        #blur_ref = blur_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
 
+    def forward(self, image_generator, pointcloud_ray, faces):
+        blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
+
+        print(blur_image.shape)
+
+        loss = None
 
 
 
 def main():
-    #print(sys.version)
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--test', type = int, default = 1)
     parser.add_argument('-g', '--gpu', type=int, default=1)
@@ -522,16 +527,17 @@ def main():
 
     # initializing class objects
     room_mesh = MeshGeneration()
-    test_image = ImageGeneration()
-    model = Model(init_pose)
-    
-    # testing
-    if args.test:
-        pointcloud_ray, faces = room_mesh.generate_mean_mesh()   
-        #np.savetxt('pointcloud.txt', pointcloud_ray)
-        #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
-        
-        blur_image = test_image.blurrer(pointcloud_ray, faces, model.init_pose_se3)
+    image_generator = ImageGeneration()
+    model = Model(init_pose).cuda()
+
+    pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
+
+    # save pointcloud and mesh option
+    #np.savetxt('pointcloud.txt', pointcloud_ray)
+    #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+
+    model.forward(image_generator, pointcloud_ray, faces)
+
 
     print("Everything ok")
 
