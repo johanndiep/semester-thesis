@@ -147,7 +147,7 @@ class PoseTransformation():
             raise ValueError("Inconsistent batch sizes {} and {}".format(vecs1.shape[0], vec2.shape[0]))
 
         # return squared skew-matrix
-        return torch.bmm(vecs1.unsqueeze(dim = 2), vecs2.unsqueeze(dim = 2).transpose(2, 1)).squeeze_()
+        return torch.bmm(vecs1.unsqueeze(dim = 2), vecs2.unsqueeze(dim = 2).transpose(2, 1))[0,:,:]
 
     def wedge(self, phi):
         # set to dimension 2
@@ -159,7 +159,7 @@ class PoseTransformation():
             raise ValueError("phi must have shape ({},) or (N,{})".format(3, 3))
 
         # return skew-matrix 
-        Phi = phi.__class__(phi.shape[0], 3, 3).zero_()
+        Phi = phi.__class__(phi.shape[0], 3, 3)
         Phi[:, 0, 1] = -phi [:, 2]
         Phi[:, 1, 0] = phi[:, 2]
         Phi[:, 0, 2] = phi[:, 1]
@@ -167,7 +167,7 @@ class PoseTransformation():
         Phi[:, 1, 2] = -phi[:, 0]
         Phi[:, 2, 1] = phi[:, 0]
 
-        return Phi.squeeze_() # reduce dimension
+        return Phi[0, :, :] # reduce dimension
 
     def from_SE3t_to_se3u(self, q, t):
         # reading input in the right form
@@ -187,7 +187,7 @@ class PoseTransformation():
         I = torch.eye(3).cuda().unsqueeze(dim = 0)
         V_inverse = I - 0.5 * self.wedge(axis * angle) + C * torch.bmm(self.wedge(axis * angle).unsqueeze(dim = 0), self.wedge(axis * angle).unsqueeze(dim = 0))
 
-        return torch.bmm(V_inverse, t.transpose(1,2)).squeeze_() # return se(3)-translation
+        return torch.bmm(V_inverse, t.transpose(1,2))[0,:,0] # return se(3)-translation
 
     def from_SE3rot_to_se3w(self, r):
         # reading and storing rotional elements
@@ -302,9 +302,10 @@ class MeshGeneration(CameraParameter):
 
         # consecutive rotation of body- and camera-frame, calculating the inverse rotation matrix
         cons_rot = torch.bmm(render_pose[:, :, :3], cam_rot)
-        cons_rot_inverse = torch.inverse(cons_rot.squeeze_()).unsqueeze(dim = 0)
 
-        tran_inverse = torch.mv(cons_rot_inverse.squeeze_(), render_pose[:, :, 3].squeeze_())
+        cons_rot_inverse = torch.inverse(cons_rot[0, :, :]).unsqueeze(dim = 0)
+
+        tran_inverse = torch.mv(cons_rot_inverse[0, :, :], render_pose[:, :, 3][0, :])
 
         tran_inverse = tran_inverse.unsqueeze(dim = 0)
         cons_rot_inverse = cons_rot_inverse
@@ -429,7 +430,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
 
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
-
+        
         return sample_image[0, :, :, 0] # return the reprojected image
 
     def blurrer(self, pointcloud_ray, faces, init_pose):
@@ -476,9 +477,9 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         blur_image = torch.mean(warped_images, -1) # taking mean to generate a blur-image
         
         # generating a grayscale-image from the RGB-image    
-        #blur_image = blur_image.detach().cpu().numpy().astype(np.uint8)
+        blur_image = blur_image.detach().cpu().numpy().astype(np.uint8)
         #blur_image = cv2.cvtColor(blur_image, cv2.COLOR_BGR2GRAY)
-        #ImageViewer(blur_image).show()
+        ImageViewer(blur_image).show()
 
         return blur_image # returning the generated blur-image
 
@@ -533,6 +534,8 @@ def main():
     # save pointcloud and mesh option
     # np.savetxt('pointcloud.txt', pointcloud_ray)
     # meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+
+    #model.forward(image_generator, pointcloud_ray, faces)
 
     optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
 
