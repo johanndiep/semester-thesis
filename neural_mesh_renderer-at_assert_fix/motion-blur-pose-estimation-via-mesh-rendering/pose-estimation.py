@@ -20,6 +20,7 @@ from skimage.viewer import ImageViewer
 from scipy.misc import imshow
 from pyquaternion import Quaternion
 from skimage.transform import resize
+from tqdm import tqdm
 
 
 # listing all paths for data retrieving and storage
@@ -504,7 +505,9 @@ class Model(nn.Module, ImageGeneration):
     def forward(self, image_generator, pointcloud_ray, faces):
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
         
-        loss = torch.sum((blur_image - self.blur_ref) ** 2) # loss function
+        loss = torch.sum((blur_image - self.blur_ref) ** 2) # loss function, sum of quadratic deviation
+
+        return loss # return loss
 
 
 def main():
@@ -528,11 +531,17 @@ def main():
     pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
 
     # save pointcloud and mesh option
-    #np.savetxt('pointcloud.txt', pointcloud_ray)
-    #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+    # np.savetxt('pointcloud.txt', pointcloud_ray)
+    # meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    model.forward(image_generator, pointcloud_ray, faces)
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
 
+    for i in tqdm(range(10)):
+        optimizer.zero_grad()
+        
+        loss = model.forward(image_generator, pointcloud_ray, faces)
+        print(loss)
+        loss.backward()
 
     print("Everything ok")
 
