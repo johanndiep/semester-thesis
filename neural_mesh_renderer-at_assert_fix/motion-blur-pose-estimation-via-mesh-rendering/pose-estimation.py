@@ -334,8 +334,8 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
 
     def reprojector(self, depth, cur_pose):
         # reading in reference image
-        img_ref = torch.tensor(imread(img_dir))
-        img_ref = img_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
+        img_ref = torch.tensor(cv2.imread(img_dir, 0)).cuda().float()
+        img_ref = img_ref.unsqueeze(dim = 0).unsqueeze(dim = 1).cuda().float()
 
         cur_pose = self.se3_exp(cur_pose) # transforming se(3)-form to SE(3)-form
 
@@ -429,7 +429,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
 
-        return sample_image[0] # return the reprojected image
+        return sample_image[0, :, :, 0] # return the reprojected image
 
     def blurrer(self, pointcloud_ray, faces, init_pose):
         warped_images = None # initializing variable for the warped-images
@@ -476,7 +476,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         
         # generating a grayscale-image from the RGB-image    
         #blur_image = blur_image.detach().cpu().numpy().astype(np.uint8)
-        #lur_image = cv2.cvtColor(blur_image, cv2.COLOR_BGR2GRAY)
+        #blur_image = cv2.cvtColor(blur_image, cv2.COLOR_BGR2GRAY)
         #ImageViewer(blur_image).show()
 
         return blur_image # returning the generated blur-image
@@ -497,19 +497,14 @@ class Model(nn.Module, ImageGeneration):
         # concatenating rotation and translation to tangent form, initializing parameter variable
         self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0))
 
-        blur_ref = imread(blur_dir).astype(np.uint8)
-        blur_ref = torch.tensor(blur_ref)
-        blur_ref = blur_ref.cpu().numpy().astype(np.uint8)
-        ImageViewer(blur_ref).show()
-        #blur_ref = blur_ref.transpose(2, 0).transpose(1, 2).unsqueeze(dim =0).cuda().float()
+        # reeading in blurry image and converting it to torch tensor
+        blur_ref = cv2.imread(blur_dir, 0)
+        self.blur_ref = torch.tensor(blur_ref).cuda().float()
 
     def forward(self, image_generator, pointcloud_ray, faces):
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
-
-        print(blur_image.shape)
-
-        loss = None
-
+        
+        loss = torch.sum((blur_image - self.blur_ref) ** 2) # loss function
 
 
 def main():
