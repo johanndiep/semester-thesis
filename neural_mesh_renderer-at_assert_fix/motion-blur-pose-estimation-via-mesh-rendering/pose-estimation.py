@@ -21,6 +21,7 @@ from scipy.misc import imshow
 from pyquaternion import Quaternion
 from skimage.transform import resize
 from tqdm import tqdm
+from torch.autograd import Variable
 
 
 # listing all paths for data retrieving and storage
@@ -43,7 +44,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 5 # scaling factor for downsizing
+        self.scale = 1 # scaling factor for downsizing
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
 
@@ -63,7 +64,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 2 # number of reprojection poses during blurring
+        self.N_poses = 5 # number of reprojection poses during blurring
         self.t_exp = 0.04 # exposure time
         self.t_int = 0.1 # time interval between two consecutive image-frames
 
@@ -192,15 +193,15 @@ class PoseTransformation():
 
     def from_SE3rot_to_se3w(self, r):
         # reading and storing rotional elements
-        m_00 = r[:,0,0]
-        m_11 = r[:,1,1]
-        m_22 = r[:,2,2]
-        m_01 = r[:,0,1]
-        m_02 = r[:,0,2]
-        m_10 = r[:,1,0]
-        m_12 = r[:,1,2]
-        m_20 = r[:,2,0]
-        m_21 = r[:,2,1]
+        m_00 = r[:, 0, 0]
+        m_11 = r[:, 1, 1]
+        m_22 = r[:, 2, 2]
+        m_01 = r[:, 0, 1]
+        m_02 = r[:, 0, 2]
+        m_10 = r[:, 1, 0]
+        m_12 = r[:, 1, 2]
+        m_20 = r[:, 2, 0]
+        m_21 = r[:, 2, 1]
 
         # transforming rotational matrix to angle axis form
         angle = ((m_00 + m_11 + m_22 -1) / 2).acos()
@@ -288,7 +289,7 @@ class MeshGeneration(CameraParameter):
         depth_tensor = torch.tensor(depth_values).cuda().float() # making it a torch tensor
 
         # 3D projection
-        zz = depth_tensor / torch.sqrt(xx ** 2 + yy ** 2 + 1)
+        zz = depth_tensor / torch.sqrt(xx * xx + yy * yy + 1)
         xx = zz * xx
         yy = zz * yy
 
@@ -297,28 +298,28 @@ class MeshGeneration(CameraParameter):
     def get_depth_image(self, pointcloud_ray, faces, render_pose):
         renderer = Renderer(pointcloud_ray, faces).cuda() # initializing Renderer-object
 
-        render_pose = self.se3_exp(render_pose) # transforming se(3)-form to SE(3)-form
+        render_pose_SE3 = self.se3_exp(render_pose) # transforming se(3)-form to SE(3)-form
 
         cam_rot = torch.tensor(self.cam_quat.rotation_matrix).cuda().float().unsqueeze(dim = 0) # getting the camera-rotation matrix
 
         # consecutive rotation of body- and camera-frame, calculating the inverse rotation matrix
-        cons_rot = torch.bmm(render_pose[:, :, :3], cam_rot)
-
+        cons_rot = torch.bmm(render_pose_SE3[:, :, :3], cam_rot)
         cons_rot_inverse = torch.inverse(cons_rot[0, :, :]).unsqueeze(dim = 0)
 
-        tran_inverse = torch.mv(cons_rot_inverse[0, :, :], render_pose[:, :, 3][0, :])
-
+        # calculating inverse translation
+        tran_inverse = torch.mv(cons_rot_inverse[0, :, :], torch.squeeze(render_pose_SE3[:, :, 3]))
         tran_inverse = tran_inverse.unsqueeze(dim = 0)
-        cons_rot_inverse = cons_rot_inverse
 
         # building the transformation matrix
-        T = torch.ones(3, 4).cuda().unsqueeze(dim = 0)
-        T[:, :, 3] = -1 * tran_inverse
-        T[:, :, :3] = cons_rot_inverse
+        A = torch.zeros(3, 4).cuda().unsqueeze(dim = 0)
+        B = torch.zeros(3, 4).cuda().unsqueeze(dim = 0)
+        A[:, :, 3] = -1 * tran_inverse
+        B[:, :, :3] = cons_rot_inverse
+        T = A + B
 
         # generate depth-image at that position
         depth = renderer.renderer.render_depth(T, renderer.vertices, renderer.faces)
-        depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
+        #depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
         #plt.imshow(depth)
         #plt.show()
 
@@ -340,12 +341,12 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         img_ref = torch.tensor(cv2.imread(img_dir, 0)).cuda().float()
         img_ref = img_ref.unsqueeze(dim = 0).unsqueeze(dim = 1).cuda().float()
 
-        cur_pose = self.se3_exp(cur_pose) # transforming se(3)-form to SE(3)-form
+        cur_pose_SE3 = self.se3_exp(cur_pose) # transforming se(3)-form to SE(3)-form
 
         cam_rot = torch.tensor(self.cam_quat.rotation_matrix).cuda().float().unsqueeze(dim = 0) # getting the camera-rotation matrix
 
         # consecutive rotation of body- and camera-frame, calculating the inverse rotation matrix
-        cons_rot = torch.bmm(cur_pose[:, :, :3], cam_rot)
+        cons_rot = torch.bmm(cur_pose_SE3[:, :, :3], cam_rot)
 
         # reference position
         ref_pose = self.start_pose
@@ -353,15 +354,19 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         ref_quat = Quaternion(ref_pose[:4]) * self.cam_quat # calculating consecutive orientation 
 
         # extracting translation part
-        cur_tran = cur_pose[:, :, 3]
+        cur_tran = cur_pose_SE3[:, :, 3]
         ref_tran = ref_pose[4:]
 
         # generating transformation from current- to world-frame
-        T_cur2W = torch.rand(4, 4).cuda().float()
-        T_cur2W[:3, :3] = cons_rot
-        T_cur2W[:3, 3] = cur_tran
-        T_cur2W[3, :3] = 0
-        T_cur2W[3, 3] = 1
+        A = torch.zeros(4, 4).cuda().float()
+        B = torch.zeros(4, 4).cuda().float()
+        C = torch.zeros(4, 4).cuda().float()
+        D = torch.zeros(4, 4).cuda().float()
+        A[:3, :3] = cons_rot
+        B[:3, 3] = cur_tran
+        C[3, :3] = 0
+        D[3, 3] = 1
+        T_cur2W = A + B + C + D
 
         # generating transformation from world- to reference-frame
         T_W2ref = np.random.rand(4,4)
@@ -393,7 +398,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         yy = y_.view(self.img_size_y, 1).repeat(1, self.img_size_x)
 
         # creating depth-image tensor
-        depth_tensor = torch.tensor(depth).cuda().float()
+        depth_tensor = depth[0, :self.img_size_y, :]
 
         # 3D projection
         zz = depth_tensor
@@ -414,8 +419,8 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         # projecting to image-plane
         z = p3d_ref[:, :, 2].unsqueeze(dim=-1)
         xy1 = p3d_ref / z
-        xy1[:, :, 0] = xy1[:, :, 0] * self.K[0][0] + self.K[0][2]
-        xy1[:, :, 1] = xy1[:, :, 1] * self.K[1][1] + self.K[1][2]
+        xy1[:, :, 0] = xy1[:, :, 0].clone() * self.K[0][0] + self.K[0][2]
+        xy1[:, :, 1] = xy1[:, :, 1].clone() * self.K[1][1] + self.K[1][2]
 
         # normalize to interval between -1 and 1
         X = 2.0 * (xy1[:, :, 0] - self.img_size_x * 0.5 + 0.5) / (self.img_size_x - 1.)
@@ -432,7 +437,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
 
-        return sample_image[0, :, :, 0] # return the reprojected image
+        return torch.squeeze(sample_image) # return the reprojected image
 
     def blurrer(self, pointcloud_ray, faces, init_pose):
         warped_images = None # initializing variable for the warped-images
@@ -467,7 +472,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
             depth = self.get_depth_image(pointcloud_ray, faces, inter_pose)
 
             # generate RGB-image at the intermediate-pose
-            image = torch.tensor(self.reprojector(depth, inter_pose)).cuda().float()
+            image = self.reprojector(depth, inter_pose)
 
             # concatenating into warped_images variable
             if i == 1:
@@ -478,9 +483,9 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         blur_image = torch.mean(warped_images, -1) # taking mean to generate a blur-image
         
         # generating a grayscale-image from the RGB-image    
-        blur_image = blur_image.detach().cpu().numpy().astype(np.uint8)
+        #blur_image = blur_image.detach().cpu().numpy().astype(np.uint8)
         #blur_image = cv2.cvtColor(blur_image, cv2.COLOR_BGR2GRAY)
-        ImageViewer(blur_image).show()
+        #ImageViewer(blur_image).show()
 
         return blur_image # returning the generated blur-image
 
@@ -498,7 +503,7 @@ class Model(nn.Module, ImageGeneration):
         init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose[4:]).cuda().float())
 
         # concatenating rotation and translation to tangent form, initializing parameter variable
-        self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0))
+        self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0), requires_grad = True)
 
         # reeading in blurry image and converting it to torch tensor
         blur_ref = cv2.imread(blur_dir, 0)
@@ -506,8 +511,13 @@ class Model(nn.Module, ImageGeneration):
 
     def forward(self, image_generator, pointcloud_ray, faces):
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
-        
-        loss = torch.sum((blur_image - self.blur_ref) ** 2) # loss function, sum of quadratic deviation
+
+        # plot blurry image for testing
+        cv2.imshow('image', blur_image.detach().cpu().numpy().astype(np.uint8))
+        cv2.waitKey(1000)
+        cv2.destroyAllWindows()
+
+        loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
 
         return loss # return loss
 
@@ -536,16 +546,21 @@ def main():
     #np.savetxt('pointcloud.txt', pointcloud_ray)
     #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    model.forward(image_generator, pointcloud_ray, faces)
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
-
-    # for i in tqdm(range(10)):
-    #     optimizer.zero_grad()
+    for i in tqdm(range(30)):
+        optimizer.zero_grad()
         
-    #     loss = model.forward(image_generator, pointcloud_ray, faces)
-    #     print(loss)
-    #     loss.backward()
+        loss = model.forward(image_generator, pointcloud_ray, faces)
+        loss.backward()
+
+        optimizer.step()
+
+        loop.set_description('Optimizing (loss %.4f)' % loss.data)
+
+        print(model.init_pose_se3)
+
+
 
     print("Everything ok")
 
