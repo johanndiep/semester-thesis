@@ -44,7 +44,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 1 # scaling factor for downsizing
+        self.scale = 3 # scaling factor for downsizing
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
 
@@ -64,7 +64,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 5 # number of reprojection poses during blurring
+        self.N_poses = 20 # number of reprojection poses during blurring
         self.t_exp = 0.04 # exposure time
         self.t_int = 0.1 # time interval between two consecutive image-frames
 
@@ -514,7 +514,7 @@ class Model(nn.Module, ImageGeneration):
 
         # plot blurry image for testing
         cv2.imshow('image', blur_image.detach().cpu().numpy().astype(np.uint8))
-        cv2.waitKey(1000)
+        cv2.waitKey()
         cv2.destroyAllWindows()
 
         loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
@@ -542,23 +542,29 @@ def main():
 
     pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
 
+    loss = model.forward(image_generator, pointcloud_ray, faces)
+
     # save pointcloud and mesh option
     #np.savetxt('pointcloud.txt', pointcloud_ray)
     #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
+    # optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
 
-    for i in tqdm(range(30)):
-        optimizer.zero_grad()
+    # loop = tqdm(range(20))
+
+    # # loop optimization
+    # for i in loop:
+    #     optimizer.zero_grad() 
         
-        loss = model.forward(image_generator, pointcloud_ray, faces)
-        loss.backward()
+    #     # calculating loss function and backpropagating
+    #     loss = model.forward(image_generator, pointcloud_ray, faces)
+    #     loss.backward()
 
-        optimizer.step()
+    #     optimizer.step()
 
-        loop.set_description('Optimizing (loss %.4f)' % loss.data)
+    #     loop.set_description('Optimizing (loss %.4f)' % loss.data)
 
-        print(model.init_pose_se3)
+    #     print(model.init_pose_se3)
 
 
 
