@@ -15,6 +15,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tqdm
 import cv2
+import math
+import random
 from skimage.io import imsave, imread
 from skimage.viewer import ImageViewer
 from scipy.misc import imshow
@@ -44,7 +46,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 3 # scaling factor for downsizing
+        self.scale = 5 # scaling factor for downsizing
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
 
@@ -55,6 +57,7 @@ class CameraParameter():
 
         # current pose information
         self.cur_timestamp = 0.2
+        self.start_timestamp = 0.1
 
         # texture parameter
         self.texture_size = 2
@@ -64,9 +67,9 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 20 # number of reprojection poses during blurring
+        self.N_poses = 10 # number of reprojection poses during blurring
         self.t_exp = 0.04 # exposure time
-        self.t_int = 0.1 # time interval between two consecutive image-frames
+        self.t_int = self.cur_timestamp - self.start_timestamp # time interval between two consecutive image-frames
 
 
 # pose calculation from Lie group to homogeneous transformation
@@ -209,7 +212,7 @@ class PoseTransformation():
         ay = (m_02 - m_20) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt() 
         az = (m_10 - m_01) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt()
 
-        return torch.cat([ax * angle, ay * angle, az * angle], dim = 0).unsqueeze(dim = 0) # return angle axis
+        return torch.cat([ax * angle, ay * angle, az * angle], dim = 0).unsqueeze(dim = 0) # return angle axis 
 
 
 # initializing the renderer
@@ -459,7 +462,7 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         for i in range(1, self.N_poses + 1):
             # calculating the timesteps at which a reprojected image should be generated
             t_i = self.cur_timestamp - self.t_exp + (i - 1) * self.t_exp / (self.N_poses - 1)
-            s = (t_i - self.t_int) / self.t_int
+            s = (t_i - self.start_timestamp) / self.t_int
 
             # linearly interpolating translation and rotation
             inter_tran = ref_tran - s * (ref_tran - cur_tran)
@@ -490,17 +493,37 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         return blur_image # returning the generated blur-image
 
 
+class Randomizer():
+    def __init__(self):
+        # uniformly sampling inclination and azimuth angle
+        self.theta = random.uniform(0, math.pi)
+        self.phi = random.uniform(0, 2 * math.pi)
+
+    def rand_position_offset(self, dist):        
+
+        x = dist * math.sin(self.theta) * math.cos(self.phi)
+        y = dist * math.sin(self.theta) * math.sin(self.phi)
+        z = dist * math.cos(self.theta)
+
+        return np.array([x, y, z])
+
+
 class Model(nn.Module, ImageGeneration):
-    def __init__(self, init_pose):
+    def __init__(self, init_pose, dist_norm):
         super(Model, self).__init__() 
+
+        random_generator = Randomizer() # create random vector generator object
+
+        tran_offset = random_generator.rand_position_offset(dist_norm)
 
         # reading quaternion and transforming it to angle axis form
         init_pose_quat = Quaternion(init_pose[:4])
         init_pose_aa = torch.tensor(init_pose_quat.axis * init_pose_quat.angle).cuda().float()
         
-        # reading in translation in SE(3) form and transforming it to se(3) form
+        # reading in translation in SE(3) form, adding shift and transforming it to se(3) form
         init_pose_tran = init_pose[4:]
-        init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose[4:]).cuda().float())
+        init_pose_tran = init_pose_tran + tran_offset
+        init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose_tran).cuda().float())
 
         # concatenating rotation and translation to tangent form, initializing parameter variable
         self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0), requires_grad = True)
@@ -534,13 +557,15 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
+    dist_norm = 2
 
     # initializing class objects
     room_mesh = MeshGeneration()
     image_generator = ImageGeneration()
-    model = Model(init_pose).cuda()
+    model = Model(init_pose, dist_norm).cuda()
 
     pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
+    print("pointcloud and room-mesh generated")
 
     loss = model.forward(image_generator, pointcloud_ray, faces)
 
@@ -550,7 +575,8 @@ def main():
 
     # optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
 
-    # loop = tqdm(range(20))
+    # rounds = 1
+    # loop = tqdm(range(rounds))
 
     # # loop optimization
     # for i in loop:
