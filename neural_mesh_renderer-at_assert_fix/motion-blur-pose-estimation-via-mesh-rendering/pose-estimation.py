@@ -46,7 +46,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 5 # scaling factor for downsizing
+        self.scale = 1 # scaling factor for downsizing
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
 
@@ -557,7 +557,7 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 2
+    dist_norm = 0.2
 
     # initializing class objects
     room_mesh = MeshGeneration()
