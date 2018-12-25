@@ -46,7 +46,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 1 # scaling factor for downsizing
+        self.scale = 3 # scaling factor for downsizing
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
 
@@ -537,10 +537,17 @@ class Model(nn.Module, ImageGeneration):
 
         # plot blurry image for testing
         cv2.imshow('image', blur_image.detach().cpu().numpy().astype(np.uint8))
-        cv2.waitKey()
+        cv2.waitKey(1000)
         cv2.destroyAllWindows()
 
         loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
+
+        difference_image = blur_image - self.blur_ref # calculate difference image
+
+        # show difference image
+        cv2.imshow('image', difference_image.detach().cpu().numpy().astype(np.uint8))
+        cv2.waitKey(1000)
+        cv2.destroyAllWindows()
 
         return loss # return loss
 
@@ -557,7 +564,7 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 0.2
+    dist_norm = 0
 
     # initializing class objects
     room_mesh = MeshGeneration()
@@ -567,32 +574,36 @@ def main():
     pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
     print("pointcloud and room-mesh generated")
 
-    loss = model.forward(image_generator, pointcloud_ray, faces)
+    random_generator = Randomizer()
+    random_generator.rand_position_offset(0)
+
+    # testing purpose
+    #loss = model.forward(image_generator, pointcloud_ray, faces)
 
     # save pointcloud and mesh option
     #np.savetxt('pointcloud.txt', pointcloud_ray)
     #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr = 0.1) # optimizer, tuning needed
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.001) # optimizer, tuning needed
 
-    # rounds = 1
-    # loop = tqdm(range(rounds))
+    rounds = 50
+    loop = tqdm(range(rounds))
 
-    # # loop optimization
-    # for i in loop:
-    #     optimizer.zero_grad() 
+    # loop optimization
+    for i in loop:
+        optimizer.zero_grad() # set gradients to zero 
         
-    #     # calculating loss function and backpropagating
-    #     loss = model.forward(image_generator, pointcloud_ray, faces)
-    #     loss.backward()
+        # calculating loss function and backpropagating
+        loss = model.forward(image_generator, pointcloud_ray, faces)
+        loss.backward()
+        optimizer.step()
 
-    #     optimizer.step()
+        loop.set_description('Optimizing (loss %.4f)' % loss.data) # loss print
 
-    #     loop.set_description('Optimizing (loss %.4f)' % loss.data)
-
-    #     print(model.init_pose_se3)
-
-
+        # break condition
+        if loss.item() < 200000000.:
+            loop.close()
+            break
 
     print("Everything ok")
 
