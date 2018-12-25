@@ -522,17 +522,21 @@ class Model(nn.Module, ImageGeneration):
         
         # reading in translation in SE(3) form, adding shift and transforming it to se(3) form
         init_pose_tran = init_pose[4:]
+        init_pose_u_gt  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose_tran).cuda().float())
         init_pose_tran = init_pose_tran + tran_offset
         init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose_tran).cuda().float())
 
-        # concatenating rotation and translation to tangent form, initializing parameter variable
+        # concatenating rotation and translation to tangent form, initializing parameter variable, printing ground-truth current pose
         self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0), requires_grad = True)
+        print("ground-truth current pose: ", torch.cat([init_pose_u_gt, init_pose_aa], dim = 0))
 
         # reeading in blurry image and converting it to torch tensor
         blur_ref = cv2.imread(blur_dir, 0)
         self.blur_ref = torch.tensor(blur_ref).cuda().float()
 
     def forward(self, image_generator, pointcloud_ray, faces):
+        print("current optimized pose: ", self.init_pose_se3) # printing current optimized posed
+        
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
 
         # plot blurry image for testing
@@ -564,7 +568,7 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 0
+    dist_norm = 0.05
 
     # initializing class objects
     room_mesh = MeshGeneration()
@@ -584,7 +588,7 @@ def main():
     #np.savetxt('pointcloud.txt', pointcloud_ray)
     #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.001) # optimizer, tuning needed
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.0001) # optimizer, tuning needed
 
     rounds = 50
     loop = tqdm(range(rounds))
