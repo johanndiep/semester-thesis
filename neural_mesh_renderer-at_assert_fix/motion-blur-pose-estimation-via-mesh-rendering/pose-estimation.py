@@ -30,6 +30,7 @@ from torch.autograd import Variable
 current_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(current_dir, 'data')
 
+# TODO: easier access
 depth_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/depth/cam0/depth_map_1.csv' # used for 3D mesh generation
 img_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/rgb/cam0/1.png' # used for image warping
 blur_dir = '/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/blurred/cam0/2.png' # used as reference blurry image
@@ -46,28 +47,29 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 3 # scaling factor for downsizing
+        self.scale = 0 # scaling factor for downsizing set according to runtime-precision tradeoff
 
-        self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients
+        self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients, not relevant
 
-        # reference pose extracted into quaternion and translation part
+        # reference pose extracted into quaternion and translation part, set for your application
         self.start_pose = np.array([0.93579, 0.0281295, 0.0740478, -0.343544, -0.684809, 1.59021, 0.91045])
         self.start_quat = Quaternion(self.start_pose[:4])
         self.start_tran = self.start_pose[4:]
 
-        # current pose information
+        # current pose information, set for your application
         self.cur_timestamp = 0.2
         self.start_timestamp = 0.1
 
-        # texture parameter
+        # texture parameter, not relevant
         self.texture_size = 2
         
-        # camera pose extracted into quaternion and translation part
+        # camera pose of cam0 extracted into quaternion and translation part, from extrinsics
+        # TODO: include cam1, translation part is in [cm]
         cam_pose = np.array([0.5, -0.5, 0.5, -0.5, 0, 0, 0])
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 10 # number of reprojection poses during blurring
+        self.N_poses = 10 # number of reprojection poses during blurring, set for your application
         self.t_exp = 0.04 # exposure time
         self.t_int = self.cur_timestamp - self.start_timestamp # time interval between two consecutive image-frames
 
@@ -541,7 +543,7 @@ class Model(nn.Module, ImageGeneration):
 
         # plot blurry image for testing
         cv2.imshow('image', blur_image.detach().cpu().numpy().astype(np.uint8))
-        cv2.waitKey(1000)
+        cv2.waitKey(10000)
         cv2.destroyAllWindows()
 
         loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
@@ -568,7 +570,7 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 0.05
+    dist_norm = 0
 
     # initializing class objects
     room_mesh = MeshGeneration()
@@ -579,35 +581,34 @@ def main():
     print("pointcloud and room-mesh generated")
 
     random_generator = Randomizer()
-    random_generator.rand_position_offset(0)
 
     # testing purpose
-    #loss = model.forward(image_generator, pointcloud_ray, faces)
+    loss = model.forward(image_generator, pointcloud_ray, faces)
 
     # save pointcloud and mesh option
     #np.savetxt('pointcloud.txt', pointcloud_ray)
     #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.0001) # optimizer, tuning needed
+    #optimizer = torch.optim.Adam(model.parameters(), lr = 0.0001) # optimizer, tuning needed
 
-    rounds = 50
-    loop = tqdm(range(rounds))
+    # rounds = 50
+    # loop = tqdm(range(rounds))
 
-    # loop optimization
-    for i in loop:
-        optimizer.zero_grad() # set gradients to zero 
+    # # loop optimization
+    # for i in loop:
+    #     optimizer.zero_grad() # set gradients to zero 
         
-        # calculating loss function and backpropagating
-        loss = model.forward(image_generator, pointcloud_ray, faces)
-        loss.backward()
-        optimizer.step()
+    #     # calculating loss function and backpropagating
+    #     loss = model.forward(image_generator, pointcloud_ray, faces)
+    #     loss.backward()
+    #     optimizer.step()
 
-        loop.set_description('Optimizing (loss %.4f)' % loss.data) # loss print
+    #     loop.set_description('Optimizing (loss %.4f)' % loss.data) # loss print
 
-        # break condition
-        if loss.item() < 200000000.:
-            loop.close()
-            break
+    #     # break condition
+    #     if loss.item() < 200000000.:
+    #         loop.close()
+    #         break
 
     print("Everything ok")
 
