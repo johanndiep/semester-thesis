@@ -47,7 +47,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 5 # scaling factor for downsizing set according to runtime-precision tradeoff
+        self.scale = 3 # scaling factor for downsizing set according to runtime-precision tradeoff
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients, not relevant
 
@@ -69,7 +69,7 @@ class CameraParameter():
         self.cam_quat = Quaternion(cam_pose[:4])
         self.cam_tran = cam_pose[4:]
 
-        self.N_poses = 10 # number of reprojection poses during blurring, set for your application
+        self.N_poses = 5 # number of reprojection poses during blurring, set for your application
         self.t_exp = 0.04 # exposure time
         self.t_int = self.cur_timestamp - self.start_timestamp # time interval between two consecutive image-frames
 
@@ -408,6 +408,8 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
 
         # creating depth-image tensor
         depth_tensor = depth[0, :self.img_size_y, :]
+        
+        depth_tensor[depth_tensor == 100] = 0
 
         # 3D projection
         zz = depth_tensor
@@ -550,7 +552,7 @@ class Model(nn.Module, ImageGeneration):
         self.blur_ref = torch.tensor(blur_ref).cuda().float()
 
     def forward(self, image_generator, pointcloud_ray, faces):
-        print("### current optimized se(3) pose: ", self.init_pose_se3) # printing current optimized posed
+        print("### current optimized se(3) pose: ", self.init_pose_se3.clone().detach()) # printing current optimized posed
         
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
 
@@ -587,7 +589,7 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 2
+    dist_norm = 0
     print("### pose-initialization:")
     print("    rotation:", init_pose[:4])
     print("    translation:", init_pose[4:])
