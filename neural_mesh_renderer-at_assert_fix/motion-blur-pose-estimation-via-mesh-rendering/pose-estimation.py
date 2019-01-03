@@ -47,7 +47,7 @@ class CameraParameter():
         self.img_size_x = 640
         self.img_size_y = 480
 
-        self.scale = 0 # scaling factor for downsizing set according to runtime-precision tradeoff
+        self.scale = 5 # scaling factor for downsizing set according to runtime-precision tradeoff
 
         self.dist_coeffs = torch.tensor([0, 0, 0, 0, 0]).float().cuda() # distortion coefficients, not relevant
 
@@ -90,7 +90,7 @@ class PoseTransformation():
         phi = tangent[:, 3:]
 
         R, R_jac = self.so3_exp(phi) # calculating SO(3)-rotation matrix and V
-        t = t.unsqueeze(2) # set to the right dimension
+        t = t.unsqueeze(dim = 2) # set to the right dimension
 
         trans = torch.bmm(R_jac, t) # calculating SE(3)-translation
         return torch.cat([R, trans], dim = 2) # return SO(3)-pose
@@ -217,12 +217,12 @@ class PoseTransformation():
         return torch.cat([ax * angle, ay * angle, az * angle], dim = 0).unsqueeze(dim = 0) # return angle axis 
 
 
-# initializing the renderer
+# defining the renderer
 class Renderer(CameraParameter, nn.Module, PoseTransformation):
     def __init__(self, vertices, faces):
         super(Renderer, self).__init__()
 
-        # initializing buffers 
+        # initializing buffers, only vertices and faces are important, dont care about texture
         self.register_buffer('vertices', vertices[None, :, :])
         self.register_buffer('faces', faces[None, :, :])
         textures = torch.ones(1, self.faces.shape[1], self.texture_size, self.texture_size, self.texture_size, 3,
@@ -235,6 +235,7 @@ class Renderer(CameraParameter, nn.Module, PoseTransformation):
 
 
 # generating a 3D mesh and depth images from specific poses, downsize by power of 2 in order to generate less faces, which results in faster computation
+# scale can be set in CameraParameter-class
 class MeshGeneration(CameraParameter):
     def __init__(self):
         super(MeshGeneration, self).__init__()
@@ -324,8 +325,11 @@ class MeshGeneration(CameraParameter):
 
         # generate depth-image at that position
         depth = renderer.renderer.render_depth(T, renderer.vertices, renderer.faces)
-        #depth = depth.detach().cpu().numpy()[0][:self.img_size_y, :]
-        #plt.imshow(depth)
+        
+        # display depth image
+        #test = depth
+        #test = test.detach().cpu().numpy()[0][:self.img_size_y, :]
+        #plt.imshow(test)
         #plt.show()
 
         # generating quick render image, use for testing
@@ -442,6 +446,11 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
 
+        test = sample_image[0, :, :, 0]
+        test = test.detach().cpu().numpy()
+        plt.imshow(test, cmap='gray')
+        plt.show()
+
         return torch.squeeze(sample_image) # return the reprojected image
 
     def blurrer(self, pointcloud_ray, faces, init_pose):
@@ -501,13 +510,13 @@ class Randomizer():
         self.theta = random.uniform(0, math.pi)
         self.phi = random.uniform(0, 2 * math.pi)
 
-    def rand_position_offset(self, dist):        
-
+    def rand_position_offset(self, dist): 
+        # calculating cartesian coordinates from spherical coordinates 
         x = dist * math.sin(self.theta) * math.cos(self.phi)
         y = dist * math.sin(self.theta) * math.sin(self.phi)
         z = dist * math.cos(self.theta)
 
-        return np.array([x, y, z])
+        return np.array([x, y, z]) # return cartesian coordinates
 
 
 class Model(nn.Module, ImageGeneration):
@@ -527,23 +536,29 @@ class Model(nn.Module, ImageGeneration):
         init_pose_u_gt  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose_tran).cuda().float())
         init_pose_tran = init_pose_tran + tran_offset
         init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose_tran).cuda().float())
+        print("### pose-initialization with disturbance:")
+        print("    rotation:", init_pose[:4])
+        print("    translation:", init_pose_tran)
 
         # concatenating rotation and translation to tangent form, initializing parameter variable, printing ground-truth current pose
         self.init_pose_se3 = nn.Parameter(torch.cat([init_pose_u, init_pose_aa], dim = 0), requires_grad = True)
-        print("ground-truth current pose: ", torch.cat([init_pose_u_gt, init_pose_aa], dim = 0))
+        print("### ground-truth initialization se(3) pose:", torch.cat([init_pose_u_gt, init_pose_aa], dim = 0))
+        print("### disturbed initialization se(3) pose:", torch.cat([init_pose_u, init_pose_aa], dim = 0))
 
         # reeading in blurry image and converting it to torch tensor
         blur_ref = cv2.imread(blur_dir, 0)
         self.blur_ref = torch.tensor(blur_ref).cuda().float()
 
     def forward(self, image_generator, pointcloud_ray, faces):
-        print("current optimized pose: ", self.init_pose_se3) # printing current optimized posed
+        print("### current optimized se(3) pose: ", self.init_pose_se3) # printing current optimized posed
         
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
 
+        plot_blur_image = blur_image # make copy
+
         # plot blurry image for testing
-        cv2.imshow('image', blur_image.detach().cpu().numpy().astype(np.uint8))
-        cv2.waitKey(10000)
+        cv2.imshow('image', plot_blur_image.detach().cpu().numpy().astype(np.uint8))
+        cv2.waitKey(1000)
         cv2.destroyAllWindows()
 
         loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
@@ -551,7 +566,8 @@ class Model(nn.Module, ImageGeneration):
         difference_image = blur_image - self.blur_ref # calculate difference image
 
         # show difference image
-        cv2.imshow('image', difference_image.detach().cpu().numpy().astype(np.uint8))
+        plot_difference_image = difference_image
+        cv2.imshow('image', plot_difference_image.detach().cpu().numpy().astype(np.uint8))
         cv2.waitKey(1000)
         cv2.destroyAllWindows()
 
@@ -567,27 +583,52 @@ def main():
     # set default tensor
     if args.gpu > 0:
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
+        print("### GPU setting:", bool(args.gpu))
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 0
+    dist_norm = 2
+    print("### pose-initialization:")
+    print("    rotation:", init_pose[:4])
+    print("    translation:", init_pose[4:])
+    print("    translation-disturbance:", dist_norm)
 
     # initializing class objects
     room_mesh = MeshGeneration()
-    image_generator = ImageGeneration()
     model = Model(init_pose, dist_norm).cuda()
+    image_generator = ImageGeneration()
+    #random_generator = Randomizer()
+    print("### all objects initialized")
 
-    pointcloud_ray, faces = room_mesh.generate_mean_mesh() # generating pointcloud and mesh
-    print("pointcloud and room-mesh generated")
-
-    random_generator = Randomizer()
-
-    # testing purpose
-    loss = model.forward(image_generator, pointcloud_ray, faces)
+    # generating pointcloud and mesh
+    pointcloud_ray, faces = room_mesh.generate_mean_mesh()
+    print("### pointcloud and polygon-mesh generated at scale:", room_mesh.scale)
 
     # save pointcloud and mesh option
-    #np.savetxt('pointcloud.txt', pointcloud_ray)
-    #meshio.write_points_cells("room_mesh.off", pointcloud_ray, {"triangle": faces})
+    np.savetxt('pointcloud.txt', pointcloud_ray)
+    meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
+    print("### pointcloud and polygon-mesh saved for MeshLab analysis: <pointcloud.txt> and <polygon_mesh.off>")
+
+    print("### start generating artificial blur images")
+
+    # testing purpose
+    loss = model.forward(image_generator, pointcloud_ray, faces) # test one iteration
+
+    # testing pose transformation functions
+    pose_tester = PoseTransformation()
+    #test_pose = np.array([0.986339, -0.0150744, 0.0960326, 0.132985, -1.10328, -0.498209, 0.909185])
+    #quat_SE3 = Quaternion(test_pose[:4])
+    #rot_mat_SE3 = quat_SE3.rotation_matrix
+    #angle_axis_se3 = quat_SE3.axis * quat_SE3.angle
+    #print("Rotation Matrix SE(3):")
+    #print(rot_mat_SE3)
+    #print("Angle Axis se(3) (true value):", angle_axis_se3)
+    #print("Translation SE(3):", test_pose[4:])
+    #u_se3 = pose_tester.from_SE3t_to_se3u(test_pose[:4], torch.tensor(test_pose[4:]).cuda().float())
+    #print("Translation se(3): ", u_se3)
+    #SE_3 = pose_tester.se3_exp(torch.tensor(np.concatenate((u_se3.cpu().numpy(), angle_axis_se3), axis = 0)).cuda().float())
+    #print("Results from exponential mapping:")
+    #print(SE_3)
 
     #optimizer = torch.optim.Adam(model.parameters(), lr = 0.0001) # optimizer, tuning needed
 
@@ -610,7 +651,7 @@ def main():
     #         loop.close()
     #         break
 
-    print("Everything ok")
+    print("### pipeline completed")
 
 
 if __name__ == '__main__':
