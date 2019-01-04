@@ -448,10 +448,11 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
         # changing the shape
         sample_image = sample_image.transpose(1,3).transpose(1,2)
 
-        test = sample_image[0, :, :, 0]
-        test = test.detach().cpu().numpy()
-        plt.imshow(test, cmap='gray')
-        plt.show()
+        # for testing, display sharp reprojected image
+        #test = sample_image[0, :, :, 0]
+        #test = test.detach().cpu().numpy()
+        #plt.imshow(test, cmap='gray')
+        #plt.show()
 
         return torch.squeeze(sample_image) # return the reprojected image
 
@@ -551,29 +552,38 @@ class Model(nn.Module, ImageGeneration):
         blur_ref = cv2.imread(blur_dir, 0)
         self.blur_ref = torch.tensor(blur_ref).cuda().float()
 
+        self.d = 0
+
     def forward(self, image_generator, pointcloud_ray, faces):
-        print("### current optimized se(3) pose: ", self.init_pose_se3.clone().detach()) # printing current optimized posed
+        print("### current optimized se(3) pose:", self.init_pose_se3.clone().detach()) # printing current optimized posed
         
         blur_image = image_generator.blurrer(pointcloud_ray, faces, self.init_pose_se3) # generating blurry image
 
         plot_blur_image = blur_image # make copy
 
         # plot blurry image for testing
-        cv2.imshow('image', plot_blur_image.detach().cpu().numpy().astype(np.uint8))
-        cv2.waitKey(1000)
-        cv2.destroyAllWindows()
+        #cv2.imshow('image', plot_blur_image.detach().cpu().numpy().astype(np.uint8))
+        #cv2.waitKey(1000)
+        #v2.destroyAllWindows()
+
+        filename = "/home/johann/motion-blur-cam-pose-tracker/semester-thesis/neural_mesh_renderer-at_assert_fix/motion-blur-pose-estimation-via-mesh-rendering/blur_%d.jpg"%self.d
+        cv2.imwrite(filename, plot_blur_image.detach().cpu().numpy().astype(np.uint8))
+        self.d = self.d + 1
 
         loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
-
-        difference_image = blur_image - self.blur_ref # calculate difference image
+        
+        # calculating current translation
+        iter_pose_SE3 = self.se3_exp(self.init_pose_se3)
+        iter_tran = iter_pose_SE3[0,:,3].detach().cpu().numpy()
 
         # show difference image
-        plot_difference_image = difference_image
-        cv2.imshow('image', plot_difference_image.detach().cpu().numpy().astype(np.uint8))
-        cv2.waitKey(1000)
-        cv2.destroyAllWindows()
+        #difference_image = blur_image - self.blur_ref # calculate difference image
+        #plot_difference_image = difference_image
+        #cv2.imshow('image', plot_difference_image.detach().cpu().numpy().astype(np.uint8))
+        #cv2.waitKey(1000)
+        #cv2.destroyAllWindows()
 
-        return loss # return loss
+        return loss, iter_tran # return loss and current translation
 
 
 def main():
@@ -589,7 +599,7 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 0
+    dist_norm = 0.2
     print("### pose-initialization:")
     print("    rotation:", init_pose[:4])
     print("    translation:", init_pose[4:])
@@ -614,7 +624,7 @@ def main():
     print("### start generating artificial blur images")
 
     # testing purpose
-    loss = model.forward(image_generator, pointcloud_ray, faces) # test one iteration
+    #loss = model.forward(image_generator, pointcloud_ray, faces) # test one iteration
 
     # testing pose transformation functions
     pose_tester = PoseTransformation()
@@ -632,26 +642,30 @@ def main():
     #print("Results from exponential mapping:")
     #print(SE_3)
 
-    #optimizer = torch.optim.Adam(model.parameters(), lr = 0.0001) # optimizer, tuning needed
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.01) # optimizer, tuning needed
 
-    # rounds = 50
-    # loop = tqdm(range(rounds))
+    rounds = 100
+    loop = tqdm(range(rounds))
 
-    # # loop optimization
-    # for i in loop:
-    #     optimizer.zero_grad() # set gradients to zero 
+    # loop optimization
+    for i in loop:
+        optimizer.zero_grad() # set gradients to zero 
         
-    #     # calculating loss function and backpropagating
-    #     loss = model.forward(image_generator, pointcloud_ray, faces)
-    #     loss.backward()
-    #     optimizer.step()
+        # calculating loss function and backpropagating
+        loss, iter_tran = model.forward(image_generator, pointcloud_ray, faces)
+        loss.backward()
+        optimizer.step()
 
-    #     loop.set_description('Optimizing (loss %.4f)' % loss.data) # loss print
+        loop.set_description("### optimizing (loss %.4f)" % loss.data) # loss print
 
-    #     # break condition
-    #     if loss.item() < 200000000.:
-    #         loop.close()
-    #         break
+        # calculate and print distance error
+        distance_error = math.sqrt((iter_tran[0]-init_pose[4]) ** 2 + (iter_tran[1]-init_pose[5]) ** 2 + (iter_tran[2]-init_pose[6]) ** 2)
+        print("### current translational error:", distance_error)
+
+        # break condition
+        if loss.item() < 200000000.:
+            loop.close()
+            break
 
     print("### pipeline completed")
 
