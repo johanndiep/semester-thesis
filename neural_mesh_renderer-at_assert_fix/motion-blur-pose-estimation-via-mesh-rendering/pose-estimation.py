@@ -510,28 +510,41 @@ class ImageGeneration(MeshGeneration, PoseTransformation):
 class Randomizer():
     def __init__(self):
         # uniformly sampling inclination and azimuth angle
-        self.theta = random.uniform(0, math.pi)
-        self.phi = random.uniform(0, 2 * math.pi)
+        self.theta_t = random.uniform(0, math.pi)
+        self.theta_r = random.uniform(0, math.pi)
+        self.phi_t = random.uniform(0, 2 * math.pi)
+        self.phi_r = random.uniform(0, 2 * math.pi)
 
     def rand_position_offset(self, dist): 
         # calculating cartesian coordinates from spherical coordinates 
-        x = dist * math.sin(self.theta) * math.cos(self.phi)
-        y = dist * math.sin(self.theta) * math.sin(self.phi)
-        z = dist * math.cos(self.theta)
+        x = dist * math.sin(self.theta_t) * math.cos(self.phi_t)
+        y = dist * math.sin(self.theta_t) * math.sin(self.phi_t)
+        z = dist * math.cos(self.theta_t)
 
         return np.array([x, y, z]) # return cartesian coordinates
 
+    def rand_rotation_offset(self, angle):
+        # calculating cartesian coordinates from spherical coordinates 
+        a_x = math.sin(self.theta_r) * math.cos(self.phi_r)
+        a_y = math.sin(self.theta_r) * math.sin(self.phi_r)
+        a_z = math.cos(self.theta_r)
+
+        return np.array([a_x, a_y, a_z]), angle       
+
 
 class Model(nn.Module, ImageGeneration):
-    def __init__(self, init_pose, dist_norm):
+    def __init__(self, init_pose, dist_norm, angl_norm):
         super(Model, self).__init__() 
 
         random_generator = Randomizer() # create random vector generator object
 
         tran_offset = random_generator.rand_position_offset(dist_norm)
+        rot_offset, rot_offset_angle = random_generator.rand_rotation_offset(angl_norm)
 
-        # reading quaternion and transforming it to angle axis form
+        # reading quaternion, adding shift and transforming it to angle axis form
         init_pose_quat = Quaternion(init_pose[:4])
+        rot_offset_quat = Quaternion(axis = rot_offset, angle = rot_offset_angle)
+        init_pose_quat = init_pose_quat * rot_offset_quat
         init_pose_aa = torch.tensor(init_pose_quat.axis * init_pose_quat.angle).cuda().float()
         
         # reading in translation in SE(3) form, adding shift and transforming it to se(3) form
@@ -540,7 +553,7 @@ class Model(nn.Module, ImageGeneration):
         init_pose_tran = init_pose_tran + tran_offset
         init_pose_u  = self.from_SE3t_to_se3u(init_pose[:4], torch.tensor(init_pose_tran).cuda().float())
         print("### pose-initialization with disturbance:")
-        print("    rotation:", init_pose[:4])
+        print("    rotation:", np.concatenate([[init_pose_quat.scalar], init_pose_quat.vector], axis = 0))
         print("    translation:", init_pose_tran)
 
         # concatenating rotation and translation to tangent form, initializing parameter variable, printing ground-truth current pose
@@ -552,7 +565,7 @@ class Model(nn.Module, ImageGeneration):
         blur_ref = cv2.imread(blur_dir, 0)
         self.blur_ref = torch.tensor(blur_ref).cuda().float()
 
-        self.d = 0
+        self.d = 0 # parameter for image saving
 
     def forward(self, image_generator, pointcloud_ray, faces):
         print("### current optimized se(3) pose:", self.init_pose_se3.clone().detach()) # printing current optimized posed
@@ -566,6 +579,7 @@ class Model(nn.Module, ImageGeneration):
         #cv2.waitKey(1000)
         #v2.destroyAllWindows()
 
+        # save intermediate blurry images
         filename = "/home/johann/motion-blur-cam-pose-tracker/semester-thesis/neural_mesh_renderer-at_assert_fix/motion-blur-pose-estimation-via-mesh-rendering/blur_%d.jpg"%self.d
         cv2.imwrite(filename, plot_blur_image.detach().cpu().numpy().astype(np.uint8))
         self.d = self.d + 1
@@ -599,15 +613,18 @@ def main():
 
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
-    dist_norm = 0.2
+    dist_norm = 0.5
+    angl_norm = math.pi/4
+
     print("### pose-initialization:")
     print("    rotation:", init_pose[:4])
     print("    translation:", init_pose[4:])
     print("    translation-disturbance:", dist_norm)
+    print("    rotation-disturbance:", angl_norm)
 
     # initializing class objects
     room_mesh = MeshGeneration()
-    model = Model(init_pose, dist_norm).cuda()
+    model = Model(init_pose, dist_norm, angl_norm).cuda()
     image_generator = ImageGeneration()
     #random_generator = Randomizer()
     print("### all objects initialized")
@@ -644,7 +661,7 @@ def main():
 
     optimizer = torch.optim.Adam(model.parameters(), lr = 0.01) # optimizer, tuning needed
 
-    rounds = 100
+    rounds = 1000
     loop = tqdm(range(rounds))
 
     # loop optimization
