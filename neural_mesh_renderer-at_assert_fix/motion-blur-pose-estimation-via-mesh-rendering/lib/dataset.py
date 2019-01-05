@@ -1,6 +1,6 @@
 # Johann Diep (jdiep@student.ethz.ch) - January 2019
 
-# This program is responsible for reading out:
+# This file is responsible for reading out:
 # * ground-truth trajectory information
 # * extrinsics of the camera: transformation from camera to vehicle body frame 
 # * intrinsics of the camera: resolution, calibration matrix

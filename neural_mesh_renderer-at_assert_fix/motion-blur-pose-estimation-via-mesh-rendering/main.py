@@ -8,12 +8,14 @@
 # libraries
 from lib import dataset
 from lib import meshgeneration
+from lib import framework
 
 # external libraries
 import argparse
 import torch
 import meshio
 import numpy as np
+
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -41,14 +43,14 @@ def main():
 	t_curr = dataset.ImageLogs().get_timestamp(cam_index, img_curr) # current timestamp 
 	dist_tran = 0.5 # pertube the initial guess for translation
 	dist_angl = 0 # pertube the initial guess for rotation
-	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
+	scale = 5 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	N_poses = 5 # number of reprojection poses during blurring
 
 	# choose pose to be estimated
 	current_quat, current_tran = dataset.GroundTruth().get_pose_at(t_curr)
 	print("*** Ground-Truth pose at current location:")
-	print("*** Translation (SE3 [x, y, z])", current_tran)
-	print("*** Rotation (Quaternion [qw, qx, qy, qz]):", current_quat)
+	print("*** - Translation (SE3 [x, y, z])", current_tran)
+	print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", current_quat)
 	print("*** Ground-Truth pose will be perturbed by {} for translation and {} for rotation.".format(dist_tran, dist_angl))
 
 	# generate 3D pointcloud and polygon mesh
@@ -61,6 +63,7 @@ def main():
 	meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
 	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
 
+	framework_obj = framework.Framework(dist_tran, dist_angl, current_quat, current_tran)
 
 if __name__ == '__main__':
 	main()

@@ -4,7 +4,7 @@
 # listing all necessary libraries
 import argparse #
 import torch #
-import torch.nn as nn
+import torch.nn as nn #
 import os # 
 import meshzoo # 
 import meshio #
@@ -15,12 +15,12 @@ import pandas as pd #
 import matplotlib.pyplot as plt
 import tqdm
 import cv2
-import math
-import random
+import math #
+import random # 
 from skimage.io import imsave, imread
 from skimage.viewer import ImageViewer
 from scipy.misc import imshow
-from pyquaternion import Quaternion
+from pyquaternion import Quaternion #
 from skimage.transform import resize # 
 from tqdm import tqdm
 from torch.autograd import Variable
@@ -614,7 +614,7 @@ def main():
     # hyperparameters definitions
     init_pose = np.array([0.951512, 0.0225991, 0.0716038, -0.298306, -0.821577, 1.31002, 0.911207])
     dist_norm = 0.5
-    angl_norm = math.pi/4
+    angl_norm = 0
 
     print("### pose-initialization:")
     print("    rotation:", init_pose[:4])
