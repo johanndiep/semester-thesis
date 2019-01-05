@@ -2,16 +2,16 @@
 #Author: Johann Diep (jdiep@student.ethz.ch)
 
 # listing all necessary libraries
-import argparse
-import torch
+import argparse #
+import torch #
 import torch.nn as nn
-import os
-import meshzoo
-import meshio
-import numpy as np
+import os # 
+import meshzoo # 
+import meshio #
+import numpy as np # 
 import sys
 import neural_renderer as nr
-import pandas as pd
+import pandas as pd # 
 import matplotlib.pyplot as plt
 import tqdm
 import cv2
@@ -21,7 +21,7 @@ from skimage.io import imsave, imread
 from skimage.viewer import ImageViewer
 from scipy.misc import imshow
 from pyquaternion import Quaternion
-from skimage.transform import resize
+from skimage.transform import resize # 
 from tqdm import tqdm
 from torch.autograd import Variable
 
