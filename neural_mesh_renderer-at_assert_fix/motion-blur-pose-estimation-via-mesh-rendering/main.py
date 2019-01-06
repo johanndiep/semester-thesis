@@ -9,6 +9,8 @@
 from lib import dataset
 from lib import meshgeneration
 from lib import framework
+from lib import renderer
+from lib import imagegeneration
 
 # external libraries
 import argparse
@@ -35,20 +37,24 @@ def main():
 		torch.set_default_tensor_type(torch.cuda.FloatTensor)
 		print("*** GPU setting:", bool(args.gpu))
 
+#######################################################################################################
+
 	# hyperparameters to be defined
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
 	img_curr = 2 # current image [1, ..., 13]
 	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref) # reference timestamp
 	t_curr = dataset.ImageLogs().get_timestamp(cam_index, img_curr) # current timestamp 
-	dist_tran = 0.5 # pertube the initial guess for translation
+	dist_tran = 0 # pertube the initial guess for translation
 	dist_angl = 0 # pertube the initial guess for rotation
-	scale = 5 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
+	scale = 1 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	N_poses = 5 # number of reprojection poses during blurring
+
+#######################################################################################################
 
 	# choose pose to be estimated
 	current_quat, current_tran = dataset.GroundTruth().get_pose_at(t_curr)
-	print("*** Ground-Truth pose at current location:")
+	print("*** Ground-truth pose at current location:")
 	print("*** - Translation (SE3 [x, y, z])", current_tran)
 	print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", current_quat)
 	print("*** Ground-Truth pose will be perturbed by {} for translation and {} for rotation.".format(dist_tran, dist_angl))
@@ -63,7 +69,9 @@ def main():
 	meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
 	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
 
-	framework_obj = framework.Framework(dist_tran, dist_angl, current_quat, current_tran)
+	framework_obj = framework.Framework(pointcloud_ray, faces, dist_tran, dist_angl, current_quat, current_tran, cam_index, img_curr, t_ref)
+
+
 
 if __name__ == '__main__':
 	main()

@@ -12,7 +12,7 @@
 import os
 import numpy as np
 import pandas as pd
-
+import cv2
 
 # define dataset here
 dataset_filename = "/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/"
@@ -111,3 +111,35 @@ class Depth():
 		depth_df = pd.read_csv(self.d_filename, sep = '\s+', header = None) # reading and storing it in pandas dataframe format
 		
 		return depth_df.values # returning depth map
+
+
+# read blur image
+class Blur():
+	def __init__(self):
+		super(Blur, self).__init__()
+
+		self.b_filename = os.path.join(dataset_filename, "blurred") # path to blur folder
+
+	def get_blur_image(self, cam, image):
+
+		self.b_filename = os.path.join(self.b_filename, "cam%s"%cam, "%s.png"%image) # exact blur image location
+
+		blur_image = cv2.imread(self.b_filename, 0) # read blur image
+
+		return blur_image # return blur image
+
+
+# read rgb image
+class Sharp():
+	def __init__(self):
+		super(Sharp, self).__init__()
+
+		self.s_filename = os.path.join(dataset_filename, "rgb") # path to rgb folder
+
+	def get_sharp_image(self, cam, image):
+
+		self.s_filename = os.path.join(self.s_filename, "cam%s"%cam, "%s.png"%image) # exact rgb image location
+
+		sharp_image = cv2.imread(self.s_filename, 0) # read rgb image
+
+		return sharp_image # return rgb image
