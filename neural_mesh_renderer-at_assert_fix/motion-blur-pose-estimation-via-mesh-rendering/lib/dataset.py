@@ -32,7 +32,7 @@ class GroundTruth():
 		self.begin_index = 2 # indices starts at 2
 
 	def get_pose_at(self, timestamp):
-		index = int((self.interval) * timestamp * 10 ) # calculate index
+		index = int((self.interval) * timestamp * 10) # calculate index
 
 		assert (timestamp < 1.4), "No data for this timestamp value." # error message for wrong value
 
@@ -95,7 +95,7 @@ class ImageLogs():
 
 	# asssume both cam has the same timestamp for each image	
 	def get_timestamp(self, cam, image_index):
-		return self.first_timestamp * image_index 
+		return self.first_timestamp * image_index, self.exposure_time
 
 
 # reading depth images from dataset
@@ -105,10 +105,10 @@ class Depth():
 
 		self.d_filename = os.path.join(dataset_filename, "depth") # path to depth folder
 
-	def get_depth_map(self, cam, image):
-		self.d_filename = os.path.join(self.d_filename, "cam%s"%cam,"depth_map_%s.csv"%image) # exact depth map location
+	def get_depth_map(self, cam, image_index):
+		self.depth_filename = os.path.join(self.d_filename, "cam%s"%cam,"depth_map_%s.csv"%image_index) # exact depth map location
 		
-		depth_df = pd.read_csv(self.d_filename, sep = '\s+', header = None) # reading and storing it in pandas dataframe format
+		depth_df = pd.read_csv(self.depth_filename, sep = '\s+', header = None) # reading and storing it in pandas dataframe format
 		
 		return depth_df.values # returning depth map
 
@@ -120,11 +120,11 @@ class Blur():
 
 		self.b_filename = os.path.join(dataset_filename, "blurred") # path to blur folder
 
-	def get_blur_image(self, cam, image):
+	def get_blur_image(self, cam, image_index):
 
-		self.b_filename = os.path.join(self.b_filename, "cam%s"%cam, "%s.png"%image) # exact blur image location
+		self.blur_filename = os.path.join(self.b_filename, "cam%s"%cam, "%s.png"%image_index) # exact blur image location
 
-		blur_image = cv2.imread(self.b_filename, 0) # read blur image
+		blur_image = cv2.imread(self.blur_filename, 0) # read blur image
 
 		return blur_image # return blur image
 
@@ -136,10 +136,10 @@ class Sharp():
 
 		self.s_filename = os.path.join(dataset_filename, "rgb") # path to rgb folder
 
-	def get_sharp_image(self, cam, image):
+	def get_sharp_image(self, cam, image_index):
 
-		self.s_filename = os.path.join(self.s_filename, "cam%s"%cam, "%s.png"%image) # exact rgb image location
+		self.sharp_filename = os.path.join(self.s_filename, "cam%s"%cam, "%s.png"%image_index) # exact rgb image location
 
-		sharp_image = cv2.imread(self.s_filename, 0) # read rgb image
+		sharp_image = cv2.imread(self.sharp_filename, 0) # read rgb image
 
 		return sharp_image # return rgb image
