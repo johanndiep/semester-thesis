@@ -10,12 +10,15 @@
 from lib import dataset
 from lib import meshgeneration
 from lib import framework
+from lib import optimization
 
 # external libraries
 import argparse
 import torch
 import meshio
+import math
 import numpy as np
+from pyquaternion import Quaternion
 
 
 def main():
@@ -56,7 +59,6 @@ def main():
 	print("*** - Scale:", scale)
 	print("*** - Number of blur-poses:", N_poses)
 
-
 #######################################################################################################
 
 	# choose pose to be estimated
@@ -76,8 +78,18 @@ def main():
 	meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
 	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
 
-	framework_obj = framework.Framework(cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, dist_tran_norm, dist_angl_norm, cur_quat, cur_tran_SE3, N_poses)
+	framework_obj = framework.Framework(cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, dist_tran_norm, dist_angl_norm, cur_quat, cur_tran_SE3, N_poses) # setting up the optimization framework
 
+	# setting up the optimization process
+	optimization_obj = optimization.Optimization(framework_obj)
+	solved_tran_SE3, solved_quat = optimization_obj.Adam()
+
+	# results
+	print("*** Solved pose:")
+	print("*** - Translation (SE3 [x, y, z])", solved_tran_SE3)
+	print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", [round(solved_quat[0], 6), round(solved_quat[1], 6), round(solved_quat[2], 6), round(solved_quat[3], 6)])
+	print("*** - Translation error [m]:", math.sqrt((solved_tran_SE3[0] - cur_tran_SE3[0]) ** 2 + (solved_tran_SE3[1] - cur_tran_SE3[1]) ** 2 + (solved_tran_SE3[2] - cur_tran_SE3[2]) ** 2))
+	print("*** - Rotation error [rad]:", solved_quat.angle - Quaternion(cur_quat).angle)
 
 
 if __name__ == '__main__':

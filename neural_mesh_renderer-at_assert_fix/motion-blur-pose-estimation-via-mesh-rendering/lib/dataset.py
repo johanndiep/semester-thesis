@@ -120,9 +120,9 @@ class Blur():
 
 		self.b_filename = os.path.join(dataset_filename, "blurred") # path to blur folder
 
-	def get_blur_image(self, cam, image_index):
+	def get_blur_image(self, cam_index, image_index):
 
-		self.blur_filename = os.path.join(self.b_filename, "cam%s"%cam, "%s.png"%image_index) # exact blur image location
+		self.blur_filename = os.path.join(self.b_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact blur image location
 
 		blur_image = cv2.imread(self.blur_filename, 0) # read blur image
 
@@ -136,9 +136,9 @@ class Sharp():
 
 		self.s_filename = os.path.join(dataset_filename, "rgb") # path to rgb folder
 
-	def get_sharp_image(self, cam, image_index):
+	def get_sharp_image(self, cam_index, image_index):
 
-		self.sharp_filename = os.path.join(self.s_filename, "cam%s"%cam, "%s.png"%image_index) # exact rgb image location
+		self.sharp_filename = os.path.join(self.s_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact rgb image location
 
 		sharp_image = cv2.imread(self.sharp_filename, 0) # read rgb image
 

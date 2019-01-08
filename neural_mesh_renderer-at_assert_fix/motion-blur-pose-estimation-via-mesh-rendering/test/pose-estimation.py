@@ -13,7 +13,7 @@ import sys
 import neural_renderer as nr #
 import pandas as pd # 
 import matplotlib.pyplot as plt #
-import tqdm
+import tqdm # 
 import cv2 #
 import math #
 import random # 
@@ -22,7 +22,7 @@ from skimage.viewer import ImageViewer
 from scipy.misc import imshow
 from pyquaternion import Quaternion #
 from skimage.transform import resize # 
-from tqdm import tqdm
+from tqdm import tqdm #
 from torch.autograd import Variable
 
 
@@ -577,7 +577,7 @@ class Model(nn.Module, ImageGeneration):
         # plot blurry image for testing
         #cv2.imshow('image', plot_blur_image.detach().cpu().numpy().astype(np.uint8))
         #cv2.waitKey(1000)
-        #v2.destroyAllWindows()
+        #cv2.destroyAllWindows()
 
         # save intermediate blurry images
         filename = "/home/johann/motion-blur-cam-pose-tracker/semester-thesis/neural_mesh_renderer-at_assert_fix/motion-blur-pose-estimation-via-mesh-rendering/blur_%d.jpg"%self.d
