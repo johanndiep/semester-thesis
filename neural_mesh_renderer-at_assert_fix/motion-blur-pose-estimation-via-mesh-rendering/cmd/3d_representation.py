@@ -41,31 +41,28 @@ def main():
 	# hyperparameters to be defined
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
-	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
-	depth_disturbance = 0.01 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
+	scale = 0 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
+	depth_disturbance = 0.1 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)
 	print("*** - Reference image:", img_ref)
 	print("*** - Scale:", scale)
+	print("*** - Depth disturbance:", depth_disturbance)
 
 #######################################################################################################
 
 	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref)[0] # reference timestamp
 
-	perturb_obj = dataset.Perturb()
-	perturb_obj.perturb_depth(cam_index, img_ref, depth_disturbance)
+	# generate 3D pointcloud and polygon mesh
+	print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
+	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_disturbance)
+	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
 
-
-	# # generate 3D pointcloud and polygon mesh
-	# print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
-	# mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale)
-	# pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
-
-	# # saving 3D pointcloud and polygon mesh
-	# np.savetxt('pointcloud.txt', pointcloud_ray)
-	# meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
-	# print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
+	# saving 3D pointcloud and polygon mesh
+	np.savetxt('pointcloud.txt', pointcloud_ray)
+	meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
+	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
 
 
 if __name__ == '__main__':

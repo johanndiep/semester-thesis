@@ -151,12 +151,11 @@ class Perturb(Depth):
 	def __init__(self):
 		super(Perturb, self).__init__()
 
-	def perturb_depth(self, cam_index, image_index, depth_disturbance):
+	def get_perturb_depth(self, cam_index, image_index, depth_disturbance):
 
-		depth = self.get_depth_map(cam_index, image_index)
+		depth = self.get_depth_map(cam_index, image_index) # get depth map
 
-		disturbance_matrix = np.random.uniform(low = -depth_disturbance, high = depth_disturbance, size = depth.shape)
+		disturbance_matrix = np.random.uniform(low = -depth_disturbance, high = depth_disturbance, size = depth.shape) # matrix with random number between interval
+		depth_perturbed = depth + disturbance_matrix # add disturbance to depth map
 
-		depth_perturbed = depth + disturbance_matrix
-
-		return depth_perturbed
+		return depth_perturbed # return perurbed depth map
