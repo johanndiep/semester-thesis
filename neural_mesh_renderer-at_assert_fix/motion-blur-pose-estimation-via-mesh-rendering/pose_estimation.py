@@ -44,6 +44,8 @@ def main():
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
 	img_cur = 2 # current image [1, ..., 13]
+	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref)[0] # reference timestamp
+	t_cur = dataset.ImageLogs().get_timestamp(cam_index, img_cur)[0] # current timestamp 
 	dist_tran_norm = 0.3 # pertube the initial guess for translation
 	dist_angl_norm = 0 # pertube the initial guess for rotation
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
@@ -57,9 +59,6 @@ def main():
 	print("*** - Number of blur-poses:", N_poses)
 
 #######################################################################################################
-
-	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref)[0] # reference timestamp
-	t_cur = dataset.ImageLogs().get_timestamp(cam_index, img_cur)[0] # current timestamp 
 
 	# choose pose to be estimated
 	cur_quat, cur_tran_SE3 = dataset.GroundTruth().get_pose_at(t_cur)

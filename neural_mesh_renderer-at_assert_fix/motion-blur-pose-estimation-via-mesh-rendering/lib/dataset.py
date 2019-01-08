@@ -56,8 +56,8 @@ class Extrinsics():
 		self.camera_extrinsics_1 = [0.5, -0.5, 0.5, -0.5, 0 * self.scalingFactor, -40 * self.scalingFactor, 0 * self.scalingFactor]
 
 	# return value depending on camera
-	def get_extrinsics(self, cam):
-		if cam == 0:
+	def get_extrinsics(self, cam_index):
+		if cam_index == 0:
 			return self.camera_extrinsics_0[:4], self.camera_extrinsics_0[4:]
 		else:
 			return self.camera_extrinsics_1[:4], self.camera_extrinsics_1[4:]
@@ -79,10 +79,10 @@ class Intrinsics():
 		self.calibration_matrix_1 = [[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]
 
 	# return values depending on camera
-	def get_intrinsics(self, cam):
-		if cam == 0:
+	def get_intrinsics(self, cam_index):
+		if cam_index == 0:
 			return self.img_size_x_0, self.img_size_y_0, self.calibration_matrix_0
-		if cam == 1:
+		if cam_index == 1:
 			return self.img_size_x_1, self.img_size_y_1, self.calibration_matrix_1
 
 
@@ -95,7 +95,7 @@ class ImageLogs():
 		self.first_timestamp = 0.1 # timestamp for first image
 
 	# asssume both cam has the same timestamp for each image	
-	def get_timestamp(self, cam, image_index):
+	def get_timestamp(self, cam_index, image_index):
 		return self.first_timestamp * image_index, self.exposure_time
 
 
@@ -106,8 +106,8 @@ class Depth():
 
 		self.d_filename = os.path.join(dataset_filename, "depth") # path to depth folder
 
-	def get_depth_map(self, cam, image_index):
-		self.depth_filename = os.path.join(self.d_filename, "cam%s"%cam,"depth_map_%s.csv"%image_index) # exact depth map location
+	def get_depth_map(self, cam_index, image_index):
+		self.depth_filename = os.path.join(self.d_filename, "cam%s"%cam_index,"depth_map_%s.csv"%image_index) # exact depth map location
 		
 		depth_df = pd.read_csv(self.depth_filename, sep = '\s+', header = None) # reading and storing it in pandas dataframe format
 		
@@ -141,6 +141,22 @@ class Sharp():
 
 		self.sharp_filename = os.path.join(self.s_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact rgb image location
 
-		sharp_image = cv2.imread(self.sharp_filename, 0) # read rgb image
+		sharp_image = cv2.imread(self.sharp_filename, 0) # read rgb image and convert to grayscale
 
-		return sharp_image # return rgb image
+		return sharp_image # return grayscale image
+
+
+# perturb depth map
+class Perturb(Depth):
+	def __init__(self):
+		super(Perturb, self).__init__()
+
+	def perturb_depth(self, cam_index, image_index, depth_disturbance):
+
+		depth = self.get_depth_map(cam_index, image_index)
+
+		disturbance_matrix = np.random.uniform(low = -depth_disturbance, high = depth_disturbance, size = depth.shape)
+
+		depth_perturbed = depth + disturbance_matrix
+
+		return depth_perturbed
