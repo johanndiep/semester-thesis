@@ -47,8 +47,8 @@ def main():
 	img_cur = 2 # current image [1, ..., 13]
 	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref)[0] # reference timestamp
 	t_cur = dataset.ImageLogs().get_timestamp(cam_index, img_cur)[0] # current timestamp 
-	dist_tran_norm = 0 # pertube the initial guess for translation
-	dist_angl_norm = 0 # pertube the initial guess for rotation
+	dist_tran_norm = 0.3 # pertube the initial guess for translation
+	dist_angl_norm = math.pi/9 # pertube the initial guess for rotation
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	N_poses = 5 # number of reprojection poses during blurring
 
@@ -74,14 +74,14 @@ def main():
 	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
 	
 	# saving 3D pointcloud and polygon mesh
-	np.savetxt('pointcloud.txt', pointcloud_ray)
-	meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
-	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
+	#np.savetxt('pointcloud.txt', pointcloud_ray)
+	#meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
+	#print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
 
 	framework_obj = framework.Framework(cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, dist_tran_norm, dist_angl_norm, cur_quat, cur_tran_SE3, N_poses) # setting up the optimization framework
 
 	# setting up the optimization process
-	optimization_obj = optimization.Optimization(framework_obj)
+	optimization_obj = optimization.Optimization(framework_obj, cur_tran_SE3, cur_quat)
 	solved_tran_SE3, solved_quat = optimization_obj.Adam()
 
 	# results
@@ -89,7 +89,7 @@ def main():
 	print("*** - Translation (SE3 [x, y, z])", solved_tran_SE3)
 	print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", [round(solved_quat[0], 6), round(solved_quat[1], 6), round(solved_quat[2], 6), round(solved_quat[3], 6)])
 	print("*** - Translation error [m]:", math.sqrt((solved_tran_SE3[0] - cur_tran_SE3[0]) ** 2 + (solved_tran_SE3[1] - cur_tran_SE3[1]) ** 2 + (solved_tran_SE3[2] - cur_tran_SE3[2]) ** 2))
-	print("*** - Rotation error [rad]:", solved_quat.angle - Quaternion(cur_quat).angle)
+	print("*** - Rotation error [rad]:", math.fabs(solved_quat.angle - Quaternion(cur_quat).angle))
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import cv2
 
+
 # define dataset here
 dataset_filename = "/home/johann/motion-blur-cam-pose-tracker/semester-thesis/RelisticRendering-dataset/"
 

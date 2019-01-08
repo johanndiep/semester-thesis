@@ -9,18 +9,21 @@ import math
 from tqdm import tqdm
 from pyquaternion import Quaternion
 
+
 class Optimization():
-	def __init__(self, framework):
+	def __init__(self, framework, cur_tran_SE3, cur_quat):
 		super(Optimization, self).__init__()
 
 		self.framework = framework # initializing framework
+		
+		# ground-truth pose
+		self.cur_tran_SE3  = cur_tran_SE3
+		self.cur_quat = cur_quat
+
 		self.rounds = 1000 # max rounds for iterations
 
 	def Adam(self):
 		lr = 0.01 # learning rate
-		min_loss = 9999999999 # random high number
-		break_iterator = 0 # iteration variable for break
-		break_condition = 50 # break if loss does not get lower for number of iterations 
 		
 		print("*** Start optimization with Adam algorithm with learning rate {}.".format(lr)) # print statement
 
@@ -30,6 +33,19 @@ class Optimization():
 
     	# loop optimization
 		for i in loop:
+
+			solved_pose_se3 = self.framework.cur_pose_se3		
+			solved_tran_SE3 = (self.framework.se3_exp(solved_pose_se3)[0,:,3]).detach().cpu().numpy()
+			solved_tran_error = math.sqrt((solved_tran_SE3[0] - self.cur_tran_SE3[0]) ** 2 + (solved_tran_SE3[1] - self.cur_tran_SE3[1]) ** 2 + (solved_tran_SE3[2] - self.cur_tran_SE3[2]) ** 2)
+
+			solved_aa = (self.framework.cur_pose_se3[3:]).detach().cpu().numpy()
+			solved_aa_angle = math.sqrt(solved_aa[0] ** 2 + solved_aa[1] ** 2 + solved_aa[2] ** 2)
+			solved_rot_error = math.fabs(solved_aa_angle - Quaternion(self.cur_quat).angle)
+
+			if (solved_tran_error < 0.01 and solved_rot_error < 0.005):
+				loop.close()
+				break
+
 			optimizer.zero_grad() # set gradients to zero 
         
 			# calculating loss function and backpropagating
@@ -39,24 +55,6 @@ class Optimization():
 
 			loop.set_description("*** Optimizing, current loss at %.4f." % loss.data) # loss print
 
-			# breaking condition
-			if loss.data < min_loss:
-				min_loss = loss.data
-				break_iterator = 0
-				min_pose_se3 = self.framework.cur_pose_se3
-			else:
-				break_iterator = break_iterator + 1
-			
-				# break out of the loop
-				if break_iterator > break_condition:
-					loop.close()
-					break
+		solved_quat = Quaternion(axis = solved_aa / solved_aa_angle, angle = solved_aa_angle) 
 
-		# solved pose
-		min_tran_SE3 = self.framework.se3_exp(min_pose_se3)[0,:,3]
-		min_aa = (min_pose_se3[3:]).detach().cpu().numpy()
-		min_aa_angle = math.sqrt(min_aa[0] ** 2 + min_aa[1] ** 2 + min_aa[2] ** 2)
-
-		min_quat = Quaternion(axis = min_aa / min_aa_angle, angle = min_aa_angle) 
-
-		return (min_tran_SE3).detach().cpu().numpy(), min_quat # return solved pose
+		return solved_tran_SE3, solved_quat # return solved pose

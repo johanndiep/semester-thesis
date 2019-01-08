@@ -16,7 +16,9 @@ import cv2
 import os
 from pyquaternion import Quaternion
 
+
 store_path = "/home/johann/motion-blur-cam-pose-tracker/semester-thesis/neural_mesh_renderer-at_assert_fix/motion-blur-pose-estimation-via-mesh-rendering/data/"
+
 
 class Framework(imagegeneration.ImageGeneration, nn.Module):
 	def __init__(self, cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, dist_tran_norm, dist_angl_norm, cur_quat, cur_tran_SE3, N_poses):
@@ -75,9 +77,10 @@ class Framework(imagegeneration.ImageGeneration, nn.Module):
 		# cv2.waitKey(10000)
 		# cv2.destroyAllWindows()
 
-		store_path_filename = os.path.join(store_path, "artificial_blur_%d.jpg"%self.img_saving)
-		cv2.imwrite(store_path_filename, plot_blur_image.detach().cpu().numpy().astype(np.uint8))
-		self.img_saving = self.img_saving + 1
+		# store intermediate results
+		#store_path_filename = os.path.join(store_path, "artificial_blur_%d.jpg"%self.img_saving)
+		#cv2.imwrite(store_path_filename, plot_blur_image.detach().cpu().numpy().astype(np.uint8))
+		#self.img_saving = self.img_saving + 1
 
 		loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
 
