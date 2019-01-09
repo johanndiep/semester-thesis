@@ -3,7 +3,8 @@
 # This program finds the pose of the blurred input image via an optimization process. It can
 # be tested with the additional rendered dataset, for which RGB-, depth- and blurred-images
 # are available. Additionally, the informations on camera ground-truth trajectory, extrinsics,
-# intrinsics and image logs must be specified in the file 'dataset.py'.
+# intrinsics and image logs must be specified in the file 'dataset.py'. In order to simulate 
+# practical application, the given depth map can be perturbed by a value within an interval.
 
 
 # libraries
@@ -30,7 +31,8 @@ def main():
 	print("This program finds the pose of the blurred input image via an optimization process. It can")
 	print("be tested with the additional rendered dataset, for which RGB-, depth- and blurred-images")
 	print("are available. Additionally, the informations on camera ground-truth trajectory, extrinsics,")
-	print("intrinsics and image logs must be specified in the file 'dataset.py'.")
+	print("intrinsics and image logs must be specified in the file 'dataset.py'. In order to simulate")
+	print("practical application, the given depth map can be perturbed by a value within an interval.")
 	print("===========================================================================================")
 
 	# set default tensor
@@ -44,12 +46,11 @@ def main():
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
 	img_cur = 2 # current image [1, ..., 13]
-	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref)[0] # reference timestamp
-	t_cur = dataset.ImageLogs().get_timestamp(cam_index, img_cur)[0] # current timestamp 
-	dist_tran_norm = 0.3 # pertube the initial guess for translation
+	dist_tran_norm = 0.2 # pertube the initial guess for translation
 	dist_angl_norm = 0 # pertube the initial guess for rotation
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	N_poses = 5 # number of reprojection poses during blurring
+	depth_disturbance = 1 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)
@@ -57,8 +58,12 @@ def main():
 	print("*** - Current image:", img_cur)
 	print("*** - Scale:", scale)
 	print("*** - Number of blur-poses:", N_poses)
+	print("*** - Depth disturbance:", depth_disturbance)
 
 #######################################################################################################
+
+	t_ref = dataset.ImageLogs().get_timestamp(cam_index, img_ref)[0] # reference timestamp
+	t_cur = dataset.ImageLogs().get_timestamp(cam_index, img_cur)[0] # current timestamp 
 
 	# choose pose to be estimated
 	cur_quat, cur_tran_SE3 = dataset.GroundTruth().get_pose_at(t_cur)
@@ -69,7 +74,7 @@ def main():
 
 	# generate 3D pointcloud and polygon mesh
 	print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
-	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale)
+	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_disturbance)
 	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
 	
 	# saving 3D pointcloud and polygon mesh

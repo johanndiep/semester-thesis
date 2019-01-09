@@ -4,7 +4,8 @@
 # intial coordinate-frame. The generated txt- and obj-file can be observed in Meshlab. The requirement
 # is the availablity of a sharp reference image with its corresponding depth-map. Additionally, 
 # the information on camera ground-truth at the reference position as well as the camera extrinsics
-# and intrinsics must be availabe. 
+# and intrinsics must be availabe. In order to simulate practical application, the given depth 
+# map can be perturbed by a value within an interval.
 
 
 # libraries
@@ -28,7 +29,8 @@ def main():
 	print("intial coordinate-frame. The generated txt- and obj-file can be observed in Meshlab. The requirement")
 	print("is the availablity of a sharp reference image with its corresponding depth-map. Additionally,")
 	print("the information on camera ground-truth at the reference position as well as the camera extrinsics")
-	print("and intrinsics must be availabe.")
+	print("and intrinsics must be availabe. In order to simulate practical application, the given depth")
+	print("map can be perturbed by a value within an interval.")
 	print("===========================================================================================")
 
 	# set default tensor
@@ -41,8 +43,8 @@ def main():
 	# hyperparameters to be defined
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
-	scale = 0 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
-	depth_disturbance = 0.1 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
+	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
+	depth_disturbance = 0.05 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)

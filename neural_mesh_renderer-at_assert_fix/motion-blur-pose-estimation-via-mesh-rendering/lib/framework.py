@@ -58,7 +58,7 @@ class Framework(imagegeneration.ImageGeneration, nn.Module):
 		print("*** - Translation (SE3 [x, y, z]):", cur_tran_SE3)
 		print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", [round(cur_quat[0], 6), round(cur_quat[1], 6), round(cur_quat[2], 6), round(cur_quat[3], 6)])
 
-		# concatenating rotation and translation to tangent form, initializing parameter variable, printing ground-truth current pose
+		# concatenating rotation and translation to tangent form, initializing parameter variable
 		self.cur_pose_se3 = nn.Parameter(torch.cat([cur_tran_se3, cur_aa], dim = 0), requires_grad = True)
 		
 		# reading in blurry image and converting it to torch tensor
@@ -78,10 +78,56 @@ class Framework(imagegeneration.ImageGeneration, nn.Module):
 		# cv2.destroyAllWindows()
 
 		# store intermediate results
-		#store_path_filename = os.path.join(store_path, "artificial_blur_%d.jpg"%self.img_saving)
-		#cv2.imwrite(store_path_filename, plot_blur_image.detach().cpu().numpy().astype(np.uint8))
-		#self.img_saving = self.img_saving + 1
+		store_path_filename = os.path.join(store_path, "artificial_blur_%d.jpg"%self.img_saving)
+		cv2.imwrite(store_path_filename, plot_blur_image.detach().cpu().numpy().astype(np.uint8))
+		self.img_saving = self.img_saving + 1
 
 		loss = torch.sum((blur_image - self.blur_ref) * (blur_image - self.blur_ref)) # loss function, sum of quadratic deviation
 
 		return loss
+
+
+class Framework_image_generator(imagegeneration.ImageGeneration):
+	def __init__(self, cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, cur_quat, cur_tran_SE3, sharp, N_poses):
+		super(Framework_image_generator, self).__init__()
+
+		# variables
+		self.cam_index = cam_index
+		self.img_ref = img_ref
+		self.img_cur = img_cur
+		self.t_ref = t_ref
+		self.t_cur = t_cur
+		self.pointcloud_ray = pointcloud_ray
+		self.faces = faces
+		self.cur_quat = cur_quat
+		self.cur_tran_SE3 = cur_tran_SE3
+		self.N_poses = N_poses
+
+		# reading in translation in SE(3) form and transforming it to se(3) form
+		cur_quat = Quaternion(self.cur_quat)
+		cur_tran_SE3 = self.cur_tran_SE3
+		cur_tran_se3 = self.from_SE3t_to_se3u(cur_quat, torch.tensor(cur_tran_SE3).cuda().float())
+
+		# reading quaternion and transforming it to angle axis form
+		cur_aa = torch.tensor(cur_quat.axis * cur_quat.angle).cuda().float()
+
+		# print statement
+		print("Generate an image at location:")
+		print("*** - Translation (SE3 [x, y, z]):", cur_tran_SE3)
+		print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", [round(cur_quat[0], 6), round(cur_quat[1], 6), round(cur_quat[2], 6), round(cur_quat[3], 6)])
+
+		# concatenating rotation and translation to tangent form, initializing parameter variable
+		self.cur_pose_se3 = torch.cat([cur_tran_se3, cur_aa], dim = 0)
+
+		depth = self.render_depth(self.cam_index, self.pointcloud_ray, self.faces, self.cur_pose_se3) # generating depth image at that pose
+
+		if sharp == True:
+			image = self.reprojector(self.cam_index, self.img_ref, self.t_ref, depth, self.cur_pose_se3) # generate image at that pose
+		else:
+			image = self.blurrer(self.cam_index, self.img_ref, self.img_cur, self.t_ref, self.t_cur, self.pointcloud_ray, self.faces, self.cur_pose_se3, self.N_poses) # calling the blurrer
+
+
+		# displaying
+		cv2.imshow('image', image.detach().cpu().numpy().astype(np.uint8))
+		cv2.waitKey(10000)
+		cv2.destroyAllWindows()
