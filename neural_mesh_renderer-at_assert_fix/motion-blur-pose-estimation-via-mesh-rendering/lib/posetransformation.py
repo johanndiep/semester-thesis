@@ -25,8 +25,8 @@ class PoseTransformation():
         R, R_jac = self.so3_exp(phi) # calculating SO(3)-rotation matrix and V
         t = t.unsqueeze(dim = 2) # set to the right dimension
 
-        trans = torch.bmm(R_jac, t) # calculating SE(3)-translation
-        return torch.cat([R, trans], dim = 2) # return SO(3)-pose
+        trans = torch.bmm(R_jac, t).cuda() # calculating SE(3)-translation
+        return torch.cat([R, trans], dim = 2).cuda() # return SO(3)-pose
 
     # implement the exponential so(3)-mapping    
     def so3_exp(self, phi):
@@ -36,7 +36,7 @@ class PoseTransformation():
 
         # V matrix size
         jac = phi.__class__(phi.shape[0], 3, 3)
-        I = torch.eye(3).expand_as(jac)
+        I = torch.eye(3).expand_as(jac).cuda()
 
         # norm of se(3)-rotation
         angle = phi.norm(p = 2, dim = 1)
@@ -88,7 +88,7 @@ class PoseTransformation():
             raise ValueError("Inconsistent batch sizes {} and {}".format(vecs1.shape[0], vec2.shape[0]))
 
         # return squared skew-matrix
-        return torch.bmm(vecs1.unsqueeze(dim = 2), vecs2.unsqueeze(dim = 2).transpose(2, 1))[0,:,:]
+        return torch.bmm(vecs1.unsqueeze(dim = 2), vecs2.unsqueeze(dim = 2).transpose(2, 1)).cuda()[0,:,:]
 
     # construct skew-matrix    
     def wedge(self, phi):
@@ -102,7 +102,7 @@ class PoseTransformation():
 
         # return skew-matrix 
         Phi = phi.__class__(phi.shape[0], 3, 3)
-        Phi[0, :, :] = torch.zeros(3, 3)
+        Phi[0, :, :] = torch.zeros(3, 3).cuda()
         Phi[:, 0, 1] = -phi [:, 2]
         Phi[:, 1, 0] = phi[:, 2]
         Phi[:, 0, 2] = phi[:, 1]
@@ -129,9 +129,9 @@ class PoseTransformation():
 
         # calculating the inverse V
         I = torch.eye(3).cuda().unsqueeze(dim = 0)
-        V_inverse = I - 0.5 * self.wedge(axis * angle) + C * torch.bmm(self.wedge(axis * angle).unsqueeze(dim = 0), self.wedge(axis * angle).unsqueeze(dim = 0))
+        V_inverse = I - 0.5 * self.wedge(axis * angle) + C * torch.bmm(self.wedge(axis * angle).unsqueeze(dim = 0), self.wedge(axis * angle).unsqueeze(dim = 0)).cuda()
 
-        return torch.bmm(V_inverse, t.transpose(1,2))[0,:,0] # return se(3)-translation
+        return torch.bmm(V_inverse, t.transpose(1,2)).cuda()[0,:,0] # return se(3)-translation
 
     # transforms a rotation in SE(3) to se(3)
     def from_SE3rot_to_se3w(self, r):
@@ -152,4 +152,4 @@ class PoseTransformation():
         ay = (m_02 - m_20) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt() 
         az = (m_10 - m_01) / ((m_21 - m_12).pow(2) + (m_02 - m_20).pow(2) + (m_10 - m_01).pow(2)).sqrt()
 
-        return torch.cat([ax * angle, ay * angle, az * angle], dim = 0).unsqueeze(dim = 0) # return angle axis
+        return torch.cat([ax * angle, ay * angle, az * angle], dim = 0).unsqueeze(dim = 0).cuda() # return angle axis

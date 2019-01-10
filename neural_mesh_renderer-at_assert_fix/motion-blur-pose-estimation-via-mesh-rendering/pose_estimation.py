@@ -19,6 +19,7 @@ import torch
 import meshio
 import math
 import numpy as np
+import time
 from pyquaternion import Quaternion
 
 
@@ -38,7 +39,7 @@ def main():
 	# set default tensor
 	if args.gpu > 0:
 		torch.set_default_tensor_type(torch.cuda.FloatTensor)
-		print("*** GPU setting:", bool(args.gpu))
+		print("*** GPU setting:", torch.cuda.is_available())
 
 #######################################################################################################
 
@@ -46,11 +47,11 @@ def main():
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
 	img_cur = 2 # current image [1, ..., 13]
-	dist_tran_norm = 0.2 # pertube the initial guess for translation
+	dist_tran_norm = 0 # pertube the initial guess for translation
 	dist_angl_norm = 0 # pertube the initial guess for rotation
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	N_poses = 5 # number of reprojection poses during blurring
-	depth_disturbance = 1 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
+	depth_disturbance = 0 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)
@@ -74,6 +75,7 @@ def main():
 
 	# generate 3D pointcloud and polygon mesh
 	print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
+	start_time = time.time() # start timer
 	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_disturbance)
 	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
 	
@@ -87,13 +89,15 @@ def main():
 	# setting up the optimization process
 	optimization_obj = optimization.Optimization(framework_obj, cur_tran_SE3, cur_quat)
 	solved_tran_SE3, solved_quat = optimization_obj.Adam()
+	end_time = time.time() # end timer
 
 	# results
 	print("*** Solved pose:")
-	print("*** - Translation (SE3 [x, y, z])", solved_tran_SE3)
+	print("*** - Translation (SE3 [x, y, z])", [round(solved_tran_SE3[0], 6), round(solved_tran_SE3[1], 6), round(solved_tran_SE3[2], 6)])
 	print("*** - Rotation (Quaternion [qw, qx, qy, qz]):", [round(solved_quat[0], 6), round(solved_quat[1], 6), round(solved_quat[2], 6), round(solved_quat[3], 6)])
 	print("*** - Translation error [m]:", math.sqrt((solved_tran_SE3[0] - cur_tran_SE3[0]) ** 2 + (solved_tran_SE3[1] - cur_tran_SE3[1]) ** 2 + (solved_tran_SE3[2] - cur_tran_SE3[2]) ** 2))
 	print("*** - Rotation error [rad]:", math.fabs(solved_quat.angle - Quaternion(cur_quat).angle))
+	print("*** This process took {} seconds to complete.".format(end_time - start_time)) # print statement
 
 
 if __name__ == '__main__':

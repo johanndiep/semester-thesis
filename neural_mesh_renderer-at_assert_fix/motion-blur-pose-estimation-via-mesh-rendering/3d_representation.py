@@ -17,7 +17,7 @@ import argparse
 import torch
 import meshio
 import numpy as np
-
+import time
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -36,15 +36,15 @@ def main():
 	# set default tensor
 	if args.gpu > 0:
 		torch.set_default_tensor_type(torch.cuda.FloatTensor)
-		print("*** GPU setting:", bool(args.gpu))
+		print("*** GPU setting:", torch.cuda.is_available())
 
 #######################################################################################################
 
 	# hyperparameters to be defined
-	cam_index = 0 # cam index [0, 1]
-	img_ref = 1 # reference image [1, ..., 13]
+	cam_index = 1 # cam index [0, 1]
+	img_ref = 10 # reference image [1, ..., 13]
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
-	depth_disturbance = 0.05 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
+	depth_disturbance = 0 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)
@@ -58,13 +58,16 @@ def main():
 
 	# generate 3D pointcloud and polygon mesh
 	print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
+	start_time = time.time() # start timer
 	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_disturbance)
 	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
+	end_time = time.time() # end timer
 
 	# saving 3D pointcloud and polygon mesh
 	np.savetxt('pointcloud.txt', pointcloud_ray)
 	meshio.write_points_cells("polygon_mesh.off", pointcloud_ray, {"triangle": faces})
 	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
+	print("*** This process took {} seconds to complete.".format(end_time - start_time))
 
 
 if __name__ == '__main__':

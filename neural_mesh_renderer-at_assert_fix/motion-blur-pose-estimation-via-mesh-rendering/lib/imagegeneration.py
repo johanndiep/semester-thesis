@@ -30,18 +30,18 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
 
         # get camera rotation and translation
         cam_quat = Quaternion(self.get_extrinsics(cam_index)[0])
-        cam_tran_SE3 = torch.tensor(self.get_extrinsics(cam_index)[1])
+        cam_tran_SE3 = torch.tensor(self.get_extrinsics(cam_index)[1]).cuda()
 
         cam_rot_SE3 = torch.tensor(cam_quat.rotation_matrix).cuda().float().unsqueeze(dim = 0) # getting the camera-rotation matrix
 
         # consecutive rotation of body- and camera-frame, calculating the inverse rotation matrix
-        cons_rot_SE3 = torch.bmm(render_pose_SE3[:, :, :3], cam_rot_SE3)
-        cons_rot_inverse_SE3 = torch.inverse(cons_rot_SE3[0, :, :]).unsqueeze(dim = 0)
+        cons_rot_SE3 = torch.bmm(render_pose_SE3[:, :, :3], cam_rot_SE3).cuda()
+        cons_rot_inverse_SE3 = torch.inverse(cons_rot_SE3[0, :, :]).unsqueeze(dim = 0).cuda()
 
-        cons_tran_SE3 = torch.mv(render_pose_SE3[0, :, :3], cam_tran_SE3) + torch.squeeze(render_pose_SE3[:, :, 3]) # consecutive translation
+        cons_tran_SE3 = torch.mv(render_pose_SE3[0, :, :3], cam_tran_SE3).cuda() + torch.squeeze(render_pose_SE3[:, :, 3]).cuda() # consecutive translation
 
         # calculating inverse translation
-        cons_tran_inverse_SE3 = -1 * torch.mv(cons_rot_inverse_SE3[0, :, :], cons_tran_SE3)
+        cons_tran_inverse_SE3 = -1 * torch.mv(cons_rot_inverse_SE3[0, :, :], cons_tran_SE3).cuda()
         cons_tran_inverse_SE3 = cons_tran_inverse_SE3.unsqueeze(dim = 0)
 
         # building the transformation matrix
@@ -56,15 +56,15 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         
         # display depth image
         # test = depth
-        # test = test.detach().cpu().numpy()[0][:self.get_intrinsics(cam)[1], :]
+        # test = test.detach().cpu().numpy()[0][:self.get_intrinsics(cam_index)[1], :]
         # plt.imshow(test)
         # plt.show()
 
         # generating quick render image, use for testing
-        # images = renderer_obj.renderer(T, renderer_obj.vertices, renderer_obj.faces, torch.tanh(renderer_obj.textures))
-        # image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.get_intrinsics(cam)[1], :, :]
+        # images = renderer_obj.renderer(T, renderer_obj.vertices, renderer_obj.faces, torch.tanh(renderer_obj.textures).cuda())
+        # image = images.detach().cpu().numpy()[0].transpose(1, 2, 0)[:self.get_intrinsics(cam_index)[1], :, :]
         # cv2.imshow('image',image)
-        # cv2.waitKey(1000)
+        # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         
         return depth # return depth-image
@@ -88,9 +88,9 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         cam_tran_SE3 = torch.tensor(self.get_extrinsics(cam_index)[1]).cuda().float()
 
         # consecutive rotation and translation of body- and camera-frame
-        cons_rot_SE3 = torch.bmm(render_pose_SE3[:, :, :3], cam_rot_SE3)
+        cons_rot_SE3 = torch.bmm(render_pose_SE3[:, :, :3], cam_rot_SE3).cuda()
         render_tran_SE3 = render_pose_SE3[:, :, 3]
-        cons_tran_SE3 = torch.mv(render_pose_SE3[0, :, :3], cam_tran_SE3) + torch.squeeze(render_tran_SE3)
+        cons_tran_SE3 = torch.mv(render_pose_SE3[0, :, :3], cam_tran_SE3).cuda() + torch.squeeze(render_tran_SE3).cuda()
 
         # reference pose, calculating consecutive orientation and translation
         ref_quat, ref_tran_SE3 = self.get_pose_at(t_ref)
@@ -122,7 +122,7 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         T_cur2W = T_cur2W.unsqueeze(dim = 0)
 
         # generating transformation from current- to reference-frame
-        T_cur2ref = torch.bmm(T_W2ref, T_cur2W)
+        T_cur2ref = torch.bmm(T_W2ref, T_cur2W).cuda()
 
         # torch tensor of dimension 1 
         x = torch.arange(0, img_size_x, 1).cuda().float()
@@ -138,8 +138,8 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
 
         # creating depth-image tensor
         depth_tensor = depth[0, :img_size_y, :]
-        
-        depth_tensor[depth_tensor == 100] = 0
+ 
+        depth_tensor[depth_tensor == 100] = -100 # avoiding same plane backprojection
 
         # 3D projection
         zz = depth_tensor
@@ -147,9 +147,9 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         yy = zz * yy
 
         # concatenating the 3D points 
-        p3d_cur = torch.stack([xx, yy, zz], dim=-1).unsqueeze(dim=0)
-        Ones = torch.ones_like(p3d_cur[:, :, :, 0]).unsqueeze(dim=-1)
-        p3d_cur = torch.cat([p3d_cur, Ones], dim=-1)
+        p3d_cur = torch.stack([xx, yy, zz], dim=-1).unsqueeze(dim=0).cuda()
+        Ones = torch.ones_like(p3d_cur[:, :, :, 0]).unsqueeze(dim=-1).cuda()
+        p3d_cur = torch.cat([p3d_cur, Ones], dim=-1).cuda()
         p3d_cur = p3d_cur.view(1, -1, 4)
         p3d_cur = p3d_cur.transpose(2, 1)
 
@@ -170,7 +170,7 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         # stacking up
         X = X.view(1, img_size_y, img_size_x)
         Y = Y.view(1, img_size_y, img_size_x)
-        xy = torch.stack([X, Y], dim=-1)
+        xy = torch.stack([X, Y], dim=-1).cuda()
 
         # grid sampling
         sample_image = torch.nn.functional.grid_sample(img_ref, xy, padding_mode='zeros')
@@ -184,7 +184,7 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         # plt.imshow(test, cmap='gray')
         # plt.show()
 
-        return torch.squeeze(sample_image) # return the reprojected image
+        return torch.squeeze(sample_image).cuda() # return the reprojected image
 
     # generate a blur image at an arbitrary position
     def blurrer(self, cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, inter_pose, N_poses):
@@ -213,7 +213,7 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
             i_aa = ref_aa - s * (ref_aa - inter_aa)
 
             # concatenating translation and rotation part
-            i_pose = torch.cat([i_tran_se3, i_aa], dim = 0)
+            i_pose = torch.cat([i_tran_se3, i_aa], dim = 0).cuda()
 
             # get depth image at the intermediate-pose
             depth = self.render_depth(cam_index, pointcloud_ray, faces, i_pose)
@@ -225,8 +225,8 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
             if i == 1:
                 warped_images = image.unsqueeze(-1)
             else:
-                warped_images = torch.cat([warped_images, image.unsqueeze(-1)], -1)
+                warped_images = torch.cat([warped_images, image.unsqueeze(-1)], -1).cuda()
 
-        blur_image = torch.mean(warped_images, -1) # taking mean to generate a blur-image
+        blur_image = torch.mean(warped_images, -1).cuda() # taking mean to generate a blur-image
 
         return blur_image # returning the generated blur-image

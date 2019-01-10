@@ -22,11 +22,11 @@ class Renderer(dataset.Intrinsics, nn.Module):
         self.register_buffer('vertices', vertices[None, :, :])
         self.register_buffer('faces', faces[None, :, :])
         textures = torch.ones(1, self.faces.shape[1], self.texture_size, self.texture_size, self.texture_size, 3,
-                              dtype = torch.float32)
+                              dtype = torch.float32).cuda()
         self.register_buffer('textures', textures)
 
         # initialzing ProjectiveRenderer-object
         img_size_x, img_size_y, K = self.get_intrinsics(cam_index)
         K = torch.tensor(K).cuda().float()
-        renderer = nr.ProjectiveRenderer(image_size = img_size_x, K = torch.unsqueeze(K, 0))
+        renderer = nr.ProjectiveRenderer(image_size = img_size_x, K = torch.unsqueeze(K, 0).cuda())
         self.renderer = renderer

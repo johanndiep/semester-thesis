@@ -11,6 +11,7 @@ from lib import dataset
 # external libraries
 import torch
 import meshzoo
+import matplotlib.pyplot as plt
 from pyquaternion import Quaternion
 from skimage.transform import resize
 
@@ -55,13 +56,13 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         # torch tensor of dimension 2
         xx = x_.repeat(self.img_size_y_scaled, 1)
         yy = y_.view(self.img_size_y_scaled, 1).repeat(1, self.img_size_x_scaled)
-        zz = torch.ones_like(xx)
+        zz = torch.ones_like(xx).cuda()
 
         # calculating the absolute position in 3D space in camera-frame
         xx, yy, zz = self.absolute_mesh(xx, yy, zz)
 
         # concatenating the 3D points 
-        pointcloud_ray = torch.stack([xx, yy, zz], dim=-1)
+        pointcloud_ray = torch.stack([xx, yy, zz], dim=-1).cuda()
         pointcloud_ray = pointcloud_ray.view(-1, 3)
 
         # reading start_quat and cam_quat
@@ -88,8 +89,14 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
 
         depth_tensor = torch.tensor(depth_values).cuda().float() # making it a torch tensor
 
+        # display depth image
+        # test = depth_tensor
+        # test = test.detach().cpu().numpy()
+        # plt.imshow(test)
+        # plt.show()
+
         # 3D projection
-        zz = depth_tensor / torch.sqrt(xx * xx + yy * yy + 1)
+        zz = depth_tensor / torch.sqrt(xx * xx + yy * yy + 1).cuda()
         xx = zz * xx
         yy = zz * yy
 

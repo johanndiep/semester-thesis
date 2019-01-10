@@ -20,7 +20,11 @@ class Optimization():
 		self.cur_tran_SE3  = cur_tran_SE3
 		self.cur_quat = cur_quat
 
-		self.rounds = 1000 # max rounds for iterations
+		self.rounds = 250 # max rounds for iterations
+
+		self.minimal_loss = 99999999999
+
+		self.convergence = False
 
 	def Adam(self):
 		lr = 0.01 # learning rate
@@ -44,6 +48,7 @@ class Optimization():
 
 			if (solved_tran_error < 0.01 and solved_rot_error < 0.005):
 				loop.close()
+				self.convergence = True
 				break
 
 			optimizer.zero_grad() # set gradients to zero 
@@ -53,8 +58,22 @@ class Optimization():
 			loss.backward()
 			optimizer.step()
 
+			# if no convergence, take the closest solution
+			if loss.data < self.minimal_loss:
+				self.minimal_loss = loss.data
+
+				minimal_tran_SE3 = solved_tran_SE3
+				minimal_aa  =solved_aa
+				minimal_aa_angle = solved_aa_angle
+
 			loop.set_description("*** Optimizing, current loss at %.4f." % loss.data) # loss print
 
-		solved_quat = Quaternion(axis = solved_aa / solved_aa_angle, angle = solved_aa_angle) 
+		if self.convergence == True:
+			solved_quat = Quaternion(axis = solved_aa / solved_aa_angle, angle = solved_aa_angle) 
+			
+			return solved_tran_SE3, solved_quat # return solved pose
 
-		return solved_tran_SE3, solved_quat # return solved pose
+		else:
+			minimal_quat = Quaternion(axis = minimal_aa / minimal_aa_angle, angle = minimal_aa_angle)
+
+			return minimal_tran_SE3, minimal_quat
