@@ -21,7 +21,7 @@ import time
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-g', '--gpu', type = int, default  =1)
+	parser.add_argument('-g', '--gpu', type = int, default  = 1)
 	args = parser.parse_args()
 
 	print("===========================================================================================")
@@ -41,8 +41,8 @@ def main():
 #######################################################################################################
 
 	# hyperparameters to be defined
-	cam_index = 1 # cam index [0, 1]
-	img_ref = 10 # reference image [1, ..., 13]
+	cam_index = 0 # cam index [0, 1]
+	img_ref = 1 # reference image [1, ..., 13]
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	depth_disturbance = 0 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
 

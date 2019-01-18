@@ -16,6 +16,9 @@ from pyquaternion import Quaternion
 from skimage.transform import resize
 
 
+torch.set_default_tensor_type(torch.cuda.FloatTensor) # using CUDA
+
+
 # generating a 3D mesh and depth images from specific poses, downsize by power of 2 in order to generate 
 # less faces, which results in faster computation
 class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics, dataset.Perturb):
@@ -33,7 +36,7 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
 
         # calibration matrix
         img_size_x, img_size_y, K = self.get_intrinsics(cam_index)
-        K = torch.tensor(K).cuda().float()
+        K = torch.tensor(K).float()
 
         self.K_scaled = K / self.scale_power # downsize K
 
@@ -46,8 +49,8 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         _, faces = meshzoo.rectangle(xmin = -1, xmax = 1, ymin = -1, ymax = 1., nx = self.img_size_x_scaled, ny = self.img_size_y_scaled, zigzag = True) # generate a mesh connecting each neighbooring pixel in a rectangular way
 
         # torch tensor of dimension 1  
-        x = torch.arange(0, self.img_size_x_scaled, 1).float().cuda()
-        y = torch.arange(0, self.img_size_y_scaled, 1).float().cuda()
+        x = torch.arange(0, self.img_size_x_scaled, 1).float()
+        y = torch.arange(0, self.img_size_y_scaled, 1).float()
 
         # precalculation for 3D projection
         x_ = (x - self.K_scaled[0][2]) / self.K_scaled[0][0]
@@ -56,13 +59,13 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         # torch tensor of dimension 2
         xx = x_.repeat(self.img_size_y_scaled, 1)
         yy = y_.view(self.img_size_y_scaled, 1).repeat(1, self.img_size_x_scaled)
-        zz = torch.ones_like(xx).cuda()
+        zz = torch.ones_like(xx)
 
         # calculating the absolute position in 3D space in camera-frame
         xx, yy, zz = self.absolute_mesh(xx, yy, zz)
 
         # concatenating the 3D points 
-        pointcloud_ray = torch.stack([xx, yy, zz], dim=-1).cuda()
+        pointcloud_ray = torch.stack([xx, yy, zz], dim=-1)
         pointcloud_ray = pointcloud_ray.view(-1, 3)
 
         # reading start_quat and cam_quat
@@ -76,9 +79,9 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         # transforming 3D points form camera- to world-frame
         for index in range(0, pointcloud_ray.shape[0]):
             rotated_point = ref_quat.rotate(cam_quat.rotate(pointcloud_ray[index]) + cam_tran_SE3)
-            pointcloud_ray[index] = torch.tensor(rotated_point).cuda().float() + torch.tensor(ref_tran_SE3).cuda().float()
+            pointcloud_ray[index] = torch.tensor(rotated_point).float() + torch.tensor(ref_tran_SE3).float()
 
-        return pointcloud_ray, torch.tensor(faces).int().cuda() # return pointcloud and faces
+        return pointcloud_ray, torch.tensor(faces).int() # return pointcloud and faces
 
     # generating the absolute distances
     def absolute_mesh(self, xx, yy, zz):
@@ -87,7 +90,7 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         depth_values = self.get_perturb_depth(self.cam_index, self.img_ref, self.depth_disturbance)
         depth_values = resize(depth_values, (self.img_size_y_scaled, self.img_size_x_scaled), mode = 'constant')
 
-        depth_tensor = torch.tensor(depth_values).cuda().float() # making it a torch tensor
+        depth_tensor = torch.tensor(depth_values).float() # making it a torch tensor
 
         # display depth image
         # test = depth_tensor
@@ -96,7 +99,7 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         # plt.show()
 
         # 3D projection
-        zz = depth_tensor / torch.sqrt(xx * xx + yy * yy + 1).cuda()
+        zz = depth_tensor / torch.sqrt(xx * xx + yy * yy + 1)
         xx = zz * xx
         yy = zz * yy
 

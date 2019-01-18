@@ -25,7 +25,7 @@ from pyquaternion import Quaternion
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-g', '--gpu', type = int, default  =1)
+	parser.add_argument('-g', '--gpu', type = int, default  = 1)
 	args = parser.parse_args()
 
 	print("===========================================================================================")
@@ -45,8 +45,8 @@ def main():
 
 	# hyperparameters to be defined
 	cam_index = 0 # cam index [0, 1]
-	img_ref = 1 # reference image [1, ..., 13]
-	img_cur = 2 # current image [1, ..., 13]
+	img_ref = 5 # reference image [1, ..., 13]
+	img_cur = 6 # current image [1, ..., 13]
 	dist_tran_norm = 0 # pertube the initial guess for translation
 	dist_angl_norm = 0 # pertube the initial guess for rotation
 	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
