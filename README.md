@@ -16,7 +16,7 @@ packages were used:
 * [Python 3.6.5](https://www.python.org/downloads/source/)
 * [CUDA Toolkit 9.0](https://developer.nvidia.com/cuda-90-download-archive/)
 * [PyTorch](https://pytorch.org/)
-* [Neural 3D Mesh Renderer](http://hiroharu-kato.com/projects_en/neural_renderer.html): A modified version was used for this project which is not publicly available at the time of writing (1. Feburary 2019).
+* [Neural 3D Mesh Renderer](http://hiroharu-kato.com/projects_en/neural_renderer.html) (A modified version was used for this project which is not publicly available at the time of writing.)
 * [pyquaternion](http://kieranwynn.github.io/pyquaternion/)
 * [meshzoo 0.4.3](https://pypi.org/project/meshzoo/)
 * [OpenCV 3.4.4](https://www.learnopencv.com/install-opencv-3-4-4-on-ubuntu-16-04/)
