@@ -46,15 +46,17 @@ def main():
 	img_cur = 2 # current image [1, ..., 13]
 	scale = 3 #scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
 	N_poses = 5 # number of reprojection poses during blurring
-	depth_disturbance = 0 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
-	sharp = True # if set to false, a blurry image is generated
+	depth_variance = 0 # perturb depth by a random value between [-depth_variance, depth_variance] [m]
+	sharp = False # if set to false, a blurry image is generated
+	pyramid_scale = 0 # apply coarse to sparse solving principle
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)
 	print("*** - Reference image:", img_ref)
 	print("*** - Current image:", img_cur)
-	print("*** - Scale:", scale)
-	print("*** - Depth disturbance:", depth_disturbance)
+	print("*** - Scale for mesh construction:", scale)
+	print("*** - Depth variance:", depth_variance)
+	print("*** - Pyramid scale:", pyramid_scale)
 	if sharp == True:
 		print("*** - Image type: sharp")
 	else:
@@ -71,7 +73,7 @@ def main():
 	# generate 3D pointcloud and polygon mesh
 	print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
 	start_time = time.time() # start timer
-	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_disturbance)
+	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_variance)
 	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
 	end_time = time.time() # end timer
 	print("*** Generating 3D representation took {} seconds to complete.".format(end_time - start_time)) # print statement
@@ -82,7 +84,7 @@ def main():
 	print("*** Saved as 'pointcloud.txt' and 'polygon_mesh.off' for Meshlab visualization.")
 
 	start_time = time.time() # start timer
-	framework_ig_obj = framework.Framework_image_generator(cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, cur_quat, cur_tran_SE3, sharp, N_poses) # setting up the generator framework
+	framework_ig_obj = framework.Framework_image_generator(cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, cur_quat, cur_tran_SE3, sharp, N_poses, pyramid_scale) # setting up the generator framework
 	end_time = time.time() # end timer
 	print("*** Generating image took {} seconds to complete.".format(end_time - start_time)) # print statement
 

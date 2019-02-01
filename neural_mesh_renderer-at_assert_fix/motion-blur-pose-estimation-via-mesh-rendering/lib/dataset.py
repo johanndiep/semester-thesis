@@ -75,15 +75,25 @@ class Intrinsics():
 		self.img_size_y_1 = 480
 
 		# calibration matrix according to pinhole camera model
-		self.calibration_matrix_0 = [[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]
-		self.calibration_matrix_1 = [[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]]
+		self.calibration_matrix_0 = np.array([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]])
+		self.calibration_matrix_1 = np.array([[320., 0, 320.], [0., 320., 240.], [0., 0., 1.]])
 
-	# return values depending on camera
 	def get_intrinsics(self, cam_index):
+
+		# return rescaled intrinsics
 		if cam_index == 0:
 			return self.img_size_x_0, self.img_size_y_0, self.calibration_matrix_0
 		if cam_index == 1:
 			return self.img_size_x_1, self.img_size_y_1, self.calibration_matrix_1
+
+	def get_scaled_intrinsics(self, cam_index, pyramid_scale):
+		scale_power = 2 ** pyramid_scale # apply scale 
+
+		# return rescaled intrinsics
+		if cam_index == 0:
+			return int(self.img_size_x_0 // scale_power), int(self.img_size_y_0 // scale_power), self.calibration_matrix_0 / scale_power
+		if cam_index == 1:
+			return int(self.img_size_x_1 // scale_power), int(self.img_size_y_1 // scale_power), self.calibration_matrix_1 / scale_power
 
 
 # contains the log informations of the images
@@ -122,12 +132,22 @@ class Blur():
 		self.b_filename = os.path.join(dataset_filename, "blurred") # path to blur folder
 
 	def get_blur_image(self, cam_index, image_index):
-
 		self.blur_filename = os.path.join(self.b_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact blur image location
 
 		blur_image = cv2.imread(self.blur_filename, 0) # read blur image
 
 		return blur_image # return blur image
+
+	def get_scaled_blur_image(self, cam_index, image_index, pyramid_scale):
+		scale_power = 2 ** pyramid_scale # apply scale
+
+		self.blur_filename = os.path.join(self.b_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact blur image location
+
+		# read blur image and rescale
+		blur_image = cv2.imread(self.blur_filename, 0)
+		blur_scaled_image = cv2.resize(blur_image, (0, 0), fx = 1 / scale_power, fy = 1 / scale_power)
+
+		return blur_scaled_image # return blur image
 
 
 # read rgb image
@@ -138,12 +158,22 @@ class Sharp():
 		self.s_filename = os.path.join(dataset_filename, "rgb") # path to rgb folder
 
 	def get_sharp_image(self, cam_index, image_index):
-
 		self.sharp_filename = os.path.join(self.s_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact rgb image location
 
 		sharp_image = cv2.imread(self.sharp_filename, 0) # read rgb image and convert to grayscale
 
 		return sharp_image # return grayscale image
+
+	def get_scaled_sharp_image(self, cam_index, image_index, pyramid_scale):
+		scale_power = 2 ** pyramid_scale # apply scale
+
+		self.sharp_filename = os.path.join(self.s_filename, "cam%s"%cam_index, "%s.png"%image_index) # exact rgb image location
+
+		# read rgb image. convert to grayscale and rescale
+		sharp_image = cv2.imread(self.sharp_filename, 0)
+		sharp_scaled_image = cv2.resize(sharp_image, (0, 0), fx = 1 / scale_power, fy = 1 / scale_power)
+
+		return sharp_scaled_image # return grayscale image
 
 
 # perturb depth map
@@ -151,11 +181,12 @@ class Perturb(Depth):
 	def __init__(self):
 		super(Perturb, self).__init__()
 
-	def get_perturb_depth(self, cam_index, image_index, depth_disturbance):
+	def get_perturb_depth(self, cam_index, image_index, disturbance_variance):
 
 		depth = self.get_depth_map(cam_index, image_index) # get depth map
 
-		disturbance_matrix = np.random.uniform(low = -depth_disturbance, high = depth_disturbance, size = depth.shape) # matrix with random number between interval
-		depth_perturbed = depth + disturbance_matrix # add disturbance to depth map
+		disturbance_matrix = np.random.normal(scale = disturbance_variance, size = (480, 640)) # matrix with normal number
+		
+		depth_perturbed = 1/(1/depth + disturbance_matrix) # add disturbance to depth map in inverse matter
 
 		return depth_perturbed # return perurbed depth map

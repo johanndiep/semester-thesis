@@ -24,9 +24,7 @@ class Optimization():
 		self.cur_quat = cur_quat
 
 		self.rounds = 100 # max rounds for iterations
-
 		self.minimal_loss = 99999999999 # random high number"
-
 		self.convergence = False # convergence flag"
 
 	def Adam(self):
@@ -41,7 +39,7 @@ class Optimization():
     	# loop optimization
 		for i in loop:
 			# current loop translation
-			solved_pose_se3 = self.framework.cur_pose_se3	
+			solved_pose_se3 = self.framework.cur_pose_se3
 			solved_tran_SE3 = (self.framework.se3_exp(solved_pose_se3)[0,:,3]).detach().cpu().numpy()
 			
 			solved_tran_error = math.sqrt((solved_tran_SE3[0] - self.cur_tran_SE3[0]) ** 2 + (solved_tran_SE3[1] - self.cur_tran_SE3[1]) ** 2 + (solved_tran_SE3[2] - self.cur_tran_SE3[2]) ** 2) # current loop translation error
@@ -58,7 +56,7 @@ class Optimization():
 			minimal_aa_angle = solved_aa_angle # copy
 
 			# convergence condition
-			if (solved_tran_error < 0.01 and solved_rot_error < 0.05):
+			if (solved_tran_error < 0.01 and solved_rot_error < 0.02):
 				loop.close()
 				self.convergence = True
 				break
@@ -75,21 +73,22 @@ class Optimization():
 				self.minimal_loss = loss.data # replace minimal loss so far
 
 				# save pose
-				#print(loss.data)
 				minimal_tran_SE3 = solved_tran_SE3
-				#print(minimal_tran_SE3)
 				minimal_aa  = solved_aa
 				minimal_aa_angle = solved_aa_angle
+				minimal_pose_se3 = self.framework.cur_pose_se3
+
 
 			loop.set_description("*** Optimizing, current loss at %.4f." % loss.data) # loss print
 
 		# if convergence
 		if self.convergence == True:
+			print(solved_pose_se3)
 			solved_quat = Quaternion(axis = solved_aa / solved_aa_angle, angle = solved_aa_angle) 
 			return solved_tran_SE3, solved_quat # return solved pose
 
 		# if no convergence
 		else:
-			print(self.minimal_loss)
+			print(minimal_pose_se3)
 			minimal_quat = Quaternion(axis = minimal_aa / minimal_aa_angle, angle = minimal_aa_angle)
 			return minimal_tran_SE3, minimal_quat

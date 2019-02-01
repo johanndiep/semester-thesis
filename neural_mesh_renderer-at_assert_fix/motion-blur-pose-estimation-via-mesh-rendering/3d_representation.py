@@ -43,14 +43,14 @@ def main():
 	# hyperparameters to be defined
 	cam_index = 0 # cam index [0, 1]
 	img_ref = 1 # reference image [1, ..., 13]
-	scale = 3 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
-	depth_disturbance = 0 # perturb depth by a random value between [-depth_disturbance, depth_disturbance] [m]
+	scale = 0 # scaling factor for downsizing according to runtime-precision tradeoff [0, ...]
+	depth_variance = 0.12 # perturb depth by a random value between [-depth_variance, depth_variance] [m]
 
 	print("*** Following hyperparameters were chosen:")
 	print("*** - Camera:", cam_index)
 	print("*** - Reference image:", img_ref)
-	print("*** - Scale:", scale)
-	print("*** - Depth disturbance:", depth_disturbance)
+	print("*** - Scale for mesh construction:", scale)
+	print("*** - Depth variance:", depth_variance)
 
 #######################################################################################################
 
@@ -59,7 +59,7 @@ def main():
 	# generate 3D pointcloud and polygon mesh
 	print("*** Generating 3D pointcloud and polygon-mesh at scale {}. This might take a while.".format(scale))
 	start_time = time.time() # start timer
-	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_disturbance)
+	mesh_obj = meshgeneration.MeshGeneration(cam_index, img_ref, t_ref, scale, depth_variance)
 	pointcloud_ray, faces = mesh_obj.generate_mean_mesh()
 	end_time = time.time() # end timer
 

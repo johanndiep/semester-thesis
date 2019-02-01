@@ -16,7 +16,7 @@ torch.set_default_tensor_type(torch.cuda.FloatTensor) # using CUDA
 
 # defining the renderer
 class Renderer(dataset.Intrinsics, nn.Module):
-    def __init__(self, cam_index, vertices, faces):
+    def __init__(self, cam_index, vertices, faces, pyramid_scale):
         super(Renderer, self).__init__()
 
         self.texture_size = 2 # texture parameter, not relevant
@@ -29,7 +29,7 @@ class Renderer(dataset.Intrinsics, nn.Module):
         self.register_buffer('textures', textures)
 
         # initialzing ProjectiveRenderer-object
-        img_size_x, img_size_y, K = self.get_intrinsics(cam_index)
+        img_size_x, img_size_y, K = self.get_scaled_intrinsics(cam_index, pyramid_scale)
         K = torch.tensor(K).float()
         renderer = nr.ProjectiveRenderer(image_size = img_size_x, K = torch.unsqueeze(K, 0))
         self.renderer = renderer

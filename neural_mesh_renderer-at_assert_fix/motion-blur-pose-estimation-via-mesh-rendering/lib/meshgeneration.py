@@ -22,7 +22,7 @@ torch.set_default_tensor_type(torch.cuda.FloatTensor) # using CUDA
 # generating a 3D mesh and depth images from specific poses, downsize by power of 2 in order to generate 
 # less faces, which results in faster computation
 class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics, dataset.Perturb):
-    def __init__(self, cam_index, img_ref, t_ref, scale, depth_disturbance):
+    def __init__(self, cam_index, img_ref, t_ref, scale, depth_variance):
         super(MeshGeneration, self).__init__()
 
         # reading input
@@ -30,7 +30,7 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
         self.img_ref = img_ref
         self.t_ref = t_ref
         self.scale = scale
-        self.depth_disturbance = depth_disturbance
+        self.depth_variance = depth_variance
 
         self.scale_power = 2 ** self.scale # downsizing by power of 2
 
@@ -87,7 +87,7 @@ class MeshGeneration(dataset.Intrinsics, dataset.GroundTruth, dataset.Extrinsics
     def absolute_mesh(self, xx, yy, zz):
 
         # reading depth, resizing it and storing it in a dataframe
-        depth_values = self.get_perturb_depth(self.cam_index, self.img_ref, self.depth_disturbance)
+        depth_values = self.get_perturb_depth(self.cam_index, self.img_ref, self.depth_variance)
         depth_values = resize(depth_values, (self.img_size_y_scaled, self.img_size_x_scaled), mode = 'constant')
 
         depth_tensor = torch.tensor(depth_values).float() # making it a torch tensor

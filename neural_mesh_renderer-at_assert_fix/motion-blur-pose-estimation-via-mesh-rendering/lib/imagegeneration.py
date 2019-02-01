@@ -26,8 +26,8 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         super(ImageGeneration, self).__init__()
 
     # render a depth image at an arbitrary position
-    def render_depth(self, cam_index, pointcloud_ray, faces, render_pose):
-        renderer_obj = renderer.Renderer(cam_index, pointcloud_ray, faces) # initialize renderer object
+    def render_depth(self, cam_index, pointcloud_ray, faces, render_pose, pyramid_scale):
+        renderer_obj = renderer.Renderer(cam_index, pointcloud_ray, faces, pyramid_scale) # initialize renderer object
 
         render_pose_SE3  = self.se3_exp(render_pose) # transforming se(3)-form to SE(3)-form
 
@@ -73,14 +73,14 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         return depth # return depth-image
 
     # generate a sharp image at an arbitrary position
-    def reprojector(self, cam_index, img_ref, t_ref, depth, render_pose):
+    def reprojector(self, cam_index, img_ref, t_ref, depth, render_pose, pyramid_scale):
     	# calibration and resolution read
-        K = torch.tensor(self.get_intrinsics(cam_index)[2]).float()
-        img_size_x = self.get_intrinsics(cam_index)[0]
-        img_size_y = self.get_intrinsics(cam_index)[1]
+        K = torch.tensor(self.get_scaled_intrinsics(cam_index, pyramid_scale)[2]).float()
+        img_size_x = self.get_scaled_intrinsics(cam_index, pyramid_scale)[0]
+        img_size_y = self.get_scaled_intrinsics(cam_index, pyramid_scale)[1]
 
         # reading in reference image
-        img_ref = torch.tensor(self.get_sharp_image(cam_index, img_ref)).float()
+        img_ref = torch.tensor(self.get_scaled_sharp_image(cam_index, img_ref, pyramid_scale)).float()
         img_ref = img_ref.unsqueeze(dim = 0).unsqueeze(dim = 1).float()
 
         render_pose_SE3 = self.se3_exp(render_pose) # transforming se(3)-form to SE(3)-form
@@ -190,7 +190,7 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
         return torch.squeeze(sample_image) # return the reprojected image
 
     # generate a blur image at an arbitrary position
-    def blurrer(self, cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, inter_pose, N_poses):
+    def blurrer(self, cam_index, img_ref, img_cur, t_ref, t_cur, pointcloud_ray, faces, inter_pose, N_poses, pyramid_scale):
         warped_images = None # initializing variable for the warped-images
 
         # defining reference and current pose
@@ -219,10 +219,10 @@ class ImageGeneration(posetransformation.PoseTransformation, dataset.Extrinsics,
             i_pose = torch.cat([i_tran_se3, i_aa], dim = 0)
 
             # get depth image at the intermediate-pose
-            depth = self.render_depth(cam_index, pointcloud_ray, faces, i_pose)
+            depth = self.render_depth(cam_index, pointcloud_ray, faces, i_pose, pyramid_scale)
 
             # generate RGB-image at the intermediate-pose
-            image = self.reprojector(cam_index, img_ref, t_ref, depth, i_pose)
+            image = self.reprojector(cam_index, img_ref, t_ref, depth, i_pose, pyramid_scale)
 
             # concatenating into warped_images variable
             if i == 1:
