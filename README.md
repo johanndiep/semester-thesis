@@ -25,25 +25,23 @@ packages were used:
 * [matplotlib 3.0.2](https://matplotlib.org/users/installing.html) (optional)
 * [MeshLab 2016](http://www.meshlab.net/#download/) (optional)
 
+### Dataset
+
+For evaluation, the rendered dataset by Peidong Liu was used:
+
+* [Realistic Rendering](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/RelisticRendering-dataset)
+* [Urban City](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/UrbanCity%20dataset)
+
 ### Code Structure
 
+The [source code]() folder contains all the essential classes with its correspond-
+ing methods:
 
-## Versioning
+## Version
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+* 2. February 2019: Version 1.0 Release
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Johann Diep (MSc Student Mechanical Engineering, jdiep@student.ethz.ch)
+* Peidong Liu (Supervisor, peidong.liu@inf.ethz.ch)
