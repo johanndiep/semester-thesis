@@ -52,9 +52,18 @@ The [main](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reproject
 * `3d representation.py`: This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
 * `image generator.py`: This program generates sharp and blurry images at arbitrary poses.
 
+## Version
+
+* 2. February 2019: [Version 1.0](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/documentation)
+
+## Authors
+
+* Johann Diep (MSc Student Mechanical Engineering, jdiep@student.ethz.ch)
+* Peidong Liu (Supervisor, peidong.liu@inf.ethz.ch)
+
 ### Docker
 
-The [docker](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/docker) folder contains a Dockerfile able to run the camera tracker from Aebi, Milano and Schnetzler. The following commands can be used: 
+The [docker](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/docker) folder contains a Dockerfile able to run the [camera tracker](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/pose-estimator) from Aebi, Milano and Schnetzler. The following commands can be used: 
 
 
 ***Accessing root***
@@ -113,12 +122,3 @@ git clone https://gitlab.com/jdiep/semester-thesis -b 2-dockerfile-to-install-al
 ```bash
 docker exec -it container_name bash
 ```
-
-## Version
-
-* 2. February 2019: Version 1.0 Release
-
-## Authors
-
-* Johann Diep (MSc Student Mechanical Engineering, jdiep@student.ethz.ch)
-* Peidong Liu (Supervisor, peidong.liu@inf.ethz.ch)
