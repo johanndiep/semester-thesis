@@ -36,8 +36,14 @@ For evaluation, the rendered dataset by Peidong Liu was used:
 
 The [source code](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
 ing methods:
-* `dataset.py`
-
+* `dataset.py`: This class is responsible for reading out the information from the rendered dataset. Additionally, it also contains the methods to return the scaled as well as the perturbed information.
+* `framework.py`: This class sets up the framework for the optimization process. It initializes the pose with a disturbance which is subsequently mapped to se(3)-formulation. Further, the objective function is defined here.
+* `imagegeneration.py`: This class contains methods to generate rendered depth maps, sharp and blurred images at arbitrary poses.
+* `meshgeneration.py`: This class contains the construction of the 3D polygon-mesh.
+* `optimization.py`: The optimization with PyTorch automatic differentiation package is contained here.
+* `posetransformation.py`: Contains the exponential and logarithmic mapping methods.
+* `randomizer.py`: Responsible for creating a cardinal directed vector with a defined length as well as an angle axis vector corresponding to an elemental rotation with a defined angle.
+* `renderer.py`: Initializes the external renderer module, which is used for generating depth maps.
 
 ## Version
 
