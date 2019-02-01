@@ -34,8 +34,10 @@ For evaluation, the rendered dataset by Peidong Liu was used:
 
 ### Code Structure
 
-The [source code]() folder contains all the essential classes with its correspond-
+The [source code](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
 ing methods:
+* `dataset.py`
+
 
 ## Version
 
