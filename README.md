@@ -52,6 +52,8 @@ The [main](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reproject
 * `3d representation.py`: This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
 * `image generator.py`: This program generates sharp and blurry images at arbitrary poses.
 
+The [docker](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/docker) folder contains a Dockerfile able to run the camera tracker from Aebi, Milano and Schnetzler. 
+
 ## Version
 
 * 2. February 2019: Version 1.0 Release
