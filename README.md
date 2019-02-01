@@ -54,62 +54,62 @@ The [main](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reproject
 
 ### Docker
 
-The [docker](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/docker) folder contains a Dockerfile able to run the camera tracker from Aebi, Milano and Schnetzler.
+The [docker](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/docker) folder contains a Dockerfile able to run the camera tracker from Aebi, Milano and Schnetzler. The following commands can be used: 
 
 
-Accessing root
+***Accessing root***
 ```bash
 sudo -s
 ```
 
-Stop all containers
+***Stop all containers***
 ```bash
 docker stop $(docker ps -a -q)
 ```
 
-Delete all containers
+***Delete all containers***
 ```bash
 docker rm $(docker ps -a -q)
 ```
 
-Delete all images
+***Delete all images***
 ```bash
 docker rmi $(docker images -q)
 ```
 
-Building image
+***Building image***
 ```bash
 docker build -t st-ubuntu .
 ```
 
-Run image
+***Run image***
 ```bash
 docker run -it st-ubuntu
 ```
 
-Show all images
+***Show all images***
 ```bash
 docker images
 ```
 
-Show all containers
+***Show all containers***
 ```bash
 docker ps -a
 ```
 
-Copy file to host machine
+***Copy file to host machine***
 ```bash
 docker cp container_name:/home/semester-thesis/file /home/johann
 ```
 
-After running bash
+***After running bash***
 ```bash
 apt-get update
 apt-get install libmrpt-dev
 git clone https://gitlab.com/jdiep/semester-thesis -b 2-dockerfile-to-install-all-dependencies-for-the-project
 ```
 
-Run multiple terminal of same container
+***Run multiple terminal of same container***
 ```bash
 docker exec -it container_name bash
 ```
