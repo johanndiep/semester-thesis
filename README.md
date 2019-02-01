@@ -1,92 +1,38 @@
-Work Overview - Semester Thesis from Johann Diep (jdiep@student.ethz.ch)
+# Optimization-based Motion Blur aware Camera Pose Estimation
 
-Docker commands 
-------------
+This GitLab repository contains the Python code for the optimization-based
+motion blur aware camera pose tracker.
 
-### Accessing root
+## Context
 
-```bash
-sudo -s
-```
-
-### Stop all containers
-```bash
-docker stop $(docker ps -a -q)
-```
-
-### Delete all containers
-```bash
-docker rm $(docker ps -a -q)
-```
-
-### Delete all images
-```bash
-docker rmi $(docker images -q)
-```
-
-### Building image
-```bash
-docker build -t st-ubuntu .
-```
-
-### Run image
-```bash
-docker run -it st-ubuntu
-```
-
-### Show all images
-```bash
-docker images
-```
-
-### Show all containers
-```bash
-docker ps -a
-```
-
-### Copy file to host machine
-```bash
-docker cp container_name:/home/semester-thesis/file /home/johann
-```
-
-### After running bash
-```bash
-apt-get update
-apt-get install libmrpt-dev
-git clone https://gitlab.com/jdiep/semester-thesis -b 3-neural-mesh-reprojection
-```
-
-### Run multiple terminal of same container
-```bash
-docker exec -it container_name bash
-```
-
-### To compile neural library
-```bash
-python setup.py install --user
-```
+A large percentage of mobile robotics applications adopt vision-based estimation of their positions within the environment in order to perform automated or semi-automated tasks. Commonly used methods, such as visual odometry (VO) or simultaneous localization and mapping (SLAM), require the input images to be sharp. In practice, these kinds of methods tend to fail or provide inaccurate results in the present of motion blurring due to rapid movements in combination with a long exposure time.
 
 
-Hyperparameters chosen so far
-------------
+### Installation
 
-* Number of poses to generate synthetical image: N_poses (must be defined, tested between 3-20)
-* times at pose P_t: t_t (timestamp at closing shutter, given in the dataset)
-* Exposure time: t_exp (must be given by the camera setup)
-* Pose at the end: P_t <-> Initialization P_tilde -> Initialization offset 
-* Pixel in the resulting blurred image are set to be non-empty only if 1/5 of the reprojected poses has information
-* Penalizing empty pixels: a =5
-* Cost function: C(P_t)
-* Distance between two consecutive images: 26.7cm (std: 2.7cm)
-* Distance traveled during open-shutter time: 10.6cm (std: 1.1cm)
-* Gradient of intensity: nabla_I (Sobel filter)
-* Scaling factor: sigma_0 (tuning such that pertubuation is not higher than 2, 0.02-0.30)
-* Decay factor: alpha (set to 1x10^-10)
+This installation was tested for Ubuntu 16.04 LTS. For other operating sys-
+tems, changes or additional packages might be required. The following
+packages were used:
+
+### Code Structure
 
 
+## Versioning
 
-Implementation
-------------
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
-* Coarse-to-fine image resolution: Implementation of the coarse-to-fine method to run the minimalization step more efficiently. 
-* Neural 3D mesh renderer: using 3D mesh for 3D reconstruction
+## Authors
+
+* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+
+See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Acknowledgments
+
+* Hat tip to anyone whose code was used
+* Inspiration
+* etc
