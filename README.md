@@ -4,7 +4,7 @@ This GitLab repository contains the Python code for the optimization-based motio
 
 ## Example: Optimization Process
 
-![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif=320x240)
+![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif)
 
 ## Context
 
