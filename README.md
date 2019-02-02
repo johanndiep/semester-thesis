@@ -4,7 +4,7 @@ This GitLab repository contains the Python code for the optimization-based motio
 
 ## Example: Optimization Process
 
-![](https://gitlab.com/jdiep/semester-thesis/blob/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/data/example.gif)
+![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif)
 
 ## Context
 
