@@ -2,12 +2,6 @@
 
 This GitLab repository contains the Python code for the optimization-based motion blur aware camera pose tracker. It was developed in the context of a semester thesis at ETH Zurich.
 
-## Example: Optimization Process
-
-A comparison of a real blurred input image (left) and artificial blurred images generated during optimization (right).
-
-![](https://gitlab.com/jdiep/semester-thesis/blob/3-neural-mesh-reprojection/RelisticRendering-dataset/blurred/cam0/2.png) ![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif)
-
 ## Context
 
 Many current robotics applications, especially autonomous mobile robots, require a robust position and orientation estimation in order to perform autonomous or semi-autonomous tasks. Vision-based techniques such as visual odometry (VO) or simultaneous location and mapping (SLAM) are used to estimate camera movements from a sequence of images. For large scale deployment as the fundamental module for pose estimation, these methods need to work robustly under any circumstances. Unfortunately, they come with practical requirements. In order to extract apparent motions, some conditions must be fulfilled, such as the presence of sufficient illuminations and textures in the environment, large enough scene overlaps between consecutive frames or the dominance of static scenes. The work in the context of this semester thesis is addressing the latter case, in particular the occurrence of motion blur due to rapid camera movements in combination with a long exposure time.
@@ -69,6 +63,12 @@ This is the main executable file of this project. It finds the pose of the blurr
 This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
 * **image generator.py:**<br/> 
 This program generates sharp and blurry images at arbitrary poses.
+
+## Example: Optimization Process
+
+Artificial blurred images generated during optimization.
+
+![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif)
 
 ## Version
 
