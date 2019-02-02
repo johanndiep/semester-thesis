@@ -30,12 +30,12 @@ Additional libraries might be required, install on request.
 
 For evaluation, rendered dataset by Peidong Liu can be used:
 
-* [Realistic Rendering](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/RelisticRendering-dataset)
-* [Urban City](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/UrbanCity%20dataset)
+* [Realistic Rendering](https://gitlab.com/jdiep/semester-thesis/tree/master/RelisticRendering-dataset)
+* [Urban City](https://gitlab.com/jdiep/semester-thesis/tree/master/UrbanCity%20dataset)
 
 ## Code Structure
 
-The [source code](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
+The [source code](https://gitlab.com/jdiep/semester-thesis/tree/master/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
 ing methods:
 
 * **dataset.py:**<br/>
@@ -55,7 +55,7 @@ Responsible for creating a cardinal directed vector with a defined length as wel
 * **renderer.py:**<br/> 
 Initializes the external renderer module, which is used for generating depth maps.
 
-The [main](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE) folder contains the executables of the classes mentioned above which can be run individually depending on the desired output:
+The [main](https://gitlab.com/jdiep/semester-thesis/tree/master/neural_mesh_renderer/OBMBACPE) folder contains the executables of the classes mentioned above which can be run individually depending on the desired output:
 
 * **pose estimation.py:**<br/>
 This is the main executable file of this project. It finds the pose of the blurred input image via an optimization process.
@@ -72,7 +72,7 @@ Artificial blurred images generated during optimization.
 
 ## Version
 
-* 2. February 2019: Version 1.0, [Documentation](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/documentation)
+* 2. February 2019: Version 1.0, [Documentation](https://gitlab.com/jdiep/semester-thesis/tree/master/documentation)
 
 ## Authors
 
