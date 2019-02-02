@@ -51,7 +51,7 @@ ing methods:
 The [main](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE) folder contains the executables of the classes mentioned above which can be run individually depending on the desired output:
 
 * pose estimation.py: This is the main executable file of this project. It finds the pose of the blurred input image via an optimization process.
-* `3d representation.py`: This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
+* 3d representation.py: This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
 * image generator.py: This program generates sharp and blurry images at arbitrary poses.
 
 ## Version
