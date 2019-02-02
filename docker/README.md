@@ -45,7 +45,7 @@ docker ps -a
 
 #### Copying file to host machine:
 ```bash
-docker cp container_name:/home/semester-thesis/<file> /home/<host>
+docker cp <container_name>:/home/semester-thesis/<file> /home/<host>
 ```
 
 #### After running bash (intermediate solution):
@@ -57,7 +57,7 @@ git clone https://gitlab.com/jdiep/semester-thesis -b 2-dockerfile-to-install-al
 
 #### Running multiple terminal of same container:
 ```bash
-docker exec -it container_name bash
+docker exec -it <container_name> bash
 ```
 
 ## Authors
