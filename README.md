@@ -39,20 +39,20 @@ For evaluation, rendered dataset by Peidong Liu can be used:
 The [source code](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
 ing methods:
 
-* dataset.py: This class is responsible for reading out the information from the rendered dataset. Additionally, it also contains the methods to return the scaled as well as the perturbed information.
-* framework.py: This class sets up the framework for the optimization process. It initializes the pose with a disturbance which is subsequently mapped to se(3)-formulation. Further, the objective function is defined here.
-* imagegeneration.py: This class contains methods to generate rendered depth maps, sharp and blurred images at arbitrary poses.
-* meshgeneration.py: This class contains the construction of the 3D polygon-mesh.
-* optimization.py: The optimization with PyTorch automatic differentiation package is contained here.
-* posetransformation.py: Contains the exponential and logarithmic mapping methods.
-* randomizer.py: Responsible for creating a cardinal directed vector with a defined length as well as an angle axis vector corresponding to an elemental rotation with a defined angle.
-* renderer.py: Initializes the external renderer module, which is used for generating depth maps.
+* **dataset.py**: This class is responsible for reading out the information from the rendered dataset. Additionally, it also contains the methods to return the scaled as well as the perturbed information.
+* **framework.py**: This class sets up the framework for the optimization process. It initializes the pose with a disturbance which is subsequently mapped to se(3)-formulation. Further, the objective function is defined here.
+* **imagegeneration.py**: This class contains methods to generate rendered depth maps, sharp and blurred images at arbitrary poses.
+* **meshgeneration.py**: This class contains the construction of the 3D polygon-mesh.
+* **optimization.py**: The optimization with PyTorch automatic differentiation package is contained here.
+* **posetransformation.py**: Contains the exponential and logarithmic mapping methods.
+* **randomizer.py**: Responsible for creating a cardinal directed vector with a defined length as well as an angle axis vector corresponding to an elemental rotation with a defined angle.
+* **renderer.py**: Initializes the external renderer module, which is used for generating depth maps.
 
 The [main](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE) folder contains the executables of the classes mentioned above which can be run individually depending on the desired output:
 
-* pose estimation.py: This is the main executable file of this project. It finds the pose of the blurred input image via an optimization process.
-* 3d representation.py: This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
-* image generator.py: This program generates sharp and blurry images at arbitrary poses.
+* **pose estimation.py**: This is the main executable file of this project. It finds the pose of the blurred input image via an optimization process.
+* **3d representation.py**: This program produces a 3D pointcloud and polygon-mesh representation of the environment in the intial frame. The generated txt- and obj-file can be observed in Meshlab.
+* **image generator.py**: This program generates sharp and blurry images at arbitrary poses.
 
 ## Version
 
