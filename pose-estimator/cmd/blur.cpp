@@ -28,14 +28,17 @@ int main(int argc, char *args[]) {
     const int n_images = atoi(args[5]);
     const double sigma = atof(args[6]);
     const std::string blur_img_path(args[7]);
-    const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(ref_img_index, cam_index);
+    //const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(ref_img_index, cam_index);
+    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(ref_img_index, cam_index, 2); 
     const mrpt::poses::CPose3DQuat &ref_pose = dataset.getPose(ref_img_index, cam_index);
 
     cv::Mat_<double> depth_map;
     if (sigma == 0) {
         depth_map = dataset.readDepthImage(ref_img_index, cam_index);
+        depth_map = dataset.readScaledDepthImage(depth_map, 2);
     } else {
         depth_map = dataset.readDepthImage(ref_img_index, cam_index, sigma);
+        depth_map = dataset.readScaledDepthImage(depth_map, 2);
     }
 
     // setup reprojector
@@ -43,13 +46,13 @@ int main(int argc, char *args[]) {
             dataset.getInternalCalibration(cam_index),
             ref_img,
             depth_map,
-            ref_pose);
+            ref_pose, 2);
 
     // setup blurrer
     posest::BlurrerImpl blurrer(ref_pose,
                                 dataset.getTimestamp(ref_img_index, cam_index),
                                 dataset.getTimestamp(blur_img_index, cam_index),
-                                dataset.getExposureTime(), n_images, ref_img, reprojector);
+                                dataset.getExposureTime(), n_images, ref_img, reprojector, 2);
 
     // generate the blurred image
     cv::Mat_<uchar> blur_img(ref_img.size());

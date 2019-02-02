@@ -91,7 +91,7 @@ RUN mkdir build && cd build && cmake ../mrpt && make
 
 ## Source code for motion blur algorithm
 WORKDIR /home
-RUN git clone https://gitlab.com/jdiep/semester-thesis -b 2-dockerfile-to-install-all-dependencies-for-the-project
+#RUN git clone https://gitlab.com/jdiep/semester-thesis -b 1-coarse-to-fine-implementation
 
 ## Finishing off
 RUN apt-get update

@@ -57,6 +57,15 @@ class ExecutionResults {
     }
 
     /**
+     * Returns the solved pose.
+     * (coordinates are given in meters)
+     * @return
+     */    
+    const CPose3DQuat &get_solved_pose() const {
+        return solved_pose;
+    }
+
+    /**
      * Returns the distance between ground truth camera position and the solved position in meters
      * @return
      */
@@ -124,43 +133,60 @@ class ExecutionParametrization {
     bool snap_only_final;
     // amount of blurring applied to depth map of sharp reference frame
     double sigma;
+    // if user want to input an exact initial pose
+    bool exact_initial_pose;
+    // solved pose from previous run at lower scale
+    CPose3DQuat solved_pose_lower_scale;
 
     ExecutionParametrization() : execution_results(nullptr), cam_index(0), ref_img_index(1), blurred_img_index(2),
-                                 n_images(5), snapshot_path(), snap_only_final(true), sigma(0) {}  // default
+                                 n_images(5), snapshot_path(), snap_only_final(true), sigma(0), exact_initial_pose(false) {}  // default
 
     /**
      * Execute the whole algorithm for the dataset
      * @param dataset
      * @return
      */
-    const ExecutionResults *posest_start(const Dataset &dataset) {
+    const ExecutionResults *posest_start(const Dataset &dataset, const double image_scale = 1) {
         if (execution_results != nullptr) delete (execution_results);
         // read information from dataset
-        const Mat_<uchar> &ref_sharp = dataset.readSharpImage(ref_img_index, cam_index);
+        //const Mat_<uchar> &ref_sharp = dataset.readSharpImage(ref_img_index, cam_index);
+        const Mat_<uchar> &ref_sharp = dataset.readSharpScaledImage(ref_img_index, cam_index, image_scale);
         const CPose3DQuat &ref_pose = dataset.getPose(ref_img_index, cam_index);
-        const Mat_<uchar> &blurred_img = dataset.readBlurredImage(blurred_img_index, cam_index);
+        //const Mat_<uchar> &blurred_img = dataset.readBlurredImage(blurred_img_index, cam_index);
+        const Mat_<uchar> &blurred_img = dataset.readBlurredScaledImage(blurred_img_index, cam_index, image_scale);
         const InternalCalibration &internalCalibration = dataset.getInternalCalibration(cam_index);
         const double exposure_time = dataset.getExposureTime();
         const CPose3DQuat &blurred_exact_pose = dataset.getPoseAtTime(blurred_img_index * 0.1, cam_index);
         Mat_<double> ref_depth;
         if (sigma == 0) {
             ref_depth = dataset.readDepthImage(ref_img_index, cam_index);
-        } else {
+            ref_depth = dataset.readScaledDepthImage(ref_depth, image_scale);
+        } 
+        else {
             ref_depth = dataset.readDepthImage(ref_img_index, cam_index, sigma);
+            ref_depth = dataset.readScaledDepthImage(ref_depth, image_scale);
         }
 
         // calculate pose where solver should start in the first iteration
         CPose3DQuat initial_pose = blurred_exact_pose + initial_offset;
 
+        if (exact_initial_pose == true) {
+            // solved pose from previous run at lower scale
+            initial_pose = solved_pose_lower_scale;
+        }
+
+        std::cout << initial_pose << std::endl;
+
         // setup pipeline with reprojector, blurrer and solver
-        posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose);
+        posest::ReprojectorImpl reprojector(internalCalibration, ref_sharp, ref_depth, ref_pose, image_scale);
         posest::BlurrerImpl blurrer(ref_pose,
                                     ref_img_index * 0.1,
                                     blurred_img_index * 0.1,
                                     dataset.getExposureTime(),
                                     n_images,
                                     ref_sharp,
-                                    reprojector);
+                                    reprojector,
+                                    image_scale);
         posest::Solver solver(blurred_img, blurrer);
         if (!snap_only_final && snapshot_path.length()) {
             solver.set_snapshot_path(snapshot_path);

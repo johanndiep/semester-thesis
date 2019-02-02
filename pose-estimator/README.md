@@ -63,7 +63,7 @@ Authors
 * Francesco Milano (fmilano@student.ethz.ch)
 * Christoph Schnetzler (cschnetz@student.ethz.ch)
 
-* Johann Diep (jdiep@student.ethz.ch) - ST student
+* Johann Diep (jdiep@student.ethz.ch) (updated)
 
 Supervisors:
 * Peidong Liu

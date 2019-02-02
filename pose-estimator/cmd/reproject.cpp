@@ -28,24 +28,29 @@ int main(int argc, char *args[]) {
     const int reproj_img_index = atoi(args[4]);
     const double sigma = atof(args[5]);
     const std::string reproj_img_path(args[6]);
-    const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(ref_img_index, cam_index);
+    //const cv::Mat_<uchar> &ref_img = dataset.readSharpImage(ref_img_index, cam_index);
+    const cv::Mat_<uchar> &ref_img = dataset.readSharpScaledImage(ref_img_index, cam_index, 2);
+
     cv::Mat_<double> depth_map;
     if (sigma == 0) {
         depth_map = dataset.readDepthImage(ref_img_index, cam_index);
+        depth_map = dataset.readScaledDepthImage(depth_map, 2);
     } else {
         depth_map = dataset.readDepthImage(ref_img_index, cam_index, sigma);
+        depth_map = dataset.readScaledDepthImage(depth_map, 2);
     }
     // setup reprojector
     posest::ReprojectorImpl reprojector(
             dataset.getInternalCalibration(cam_index),
             ref_img,
             depth_map,
-            dataset.getPose(ref_img_index, cam_index));
+            dataset.getPose(ref_img_index, cam_index),
+            2);
 
     // generate reprojected image
     cv::Mat_<uchar> reproj_img(ref_img.size());
     cv::Mat_<bool> reproj_mask(ref_img.size());
-    reprojector.reproject(dataset.getPose(reproj_img_index, cam_index), reproj_img, reproj_mask);
+    reprojector.reproject(dataset.getPose(reproj_img_index, cam_index), reproj_img, reproj_mask, 2);
 
     // colorize empty pixels before writing file to disk
     cv::Mat output;

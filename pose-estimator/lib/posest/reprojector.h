@@ -35,7 +35,8 @@ class ReprojectorImpl : public Reprojector {
     ReprojectorImpl(const posest::InternalCalibration &ic,
                     const cv::Mat_<uchar> &ref_img,
                     const cv::Mat_<double> &ref_depth,
-                    const mrpt::poses::CPose3DQuat &ref_pose);
+                    const mrpt::poses::CPose3DQuat &ref_pose,
+                    const double image_scale = 1);
 
     /**
      *
@@ -57,7 +58,7 @@ class ReprojectorImpl : public Reprojector {
      * @param reproj_pose
      * @param pixel_coords
      */
-    void reproject(const mrpt::poses::CPose3DQuat &reproj_pose, std::vector<mrpt::math::TPoint3D> &pixel_coords) const;
+    void reproject(const mrpt::poses::CPose3DQuat &reproj_pose, std::vector<mrpt::math::TPoint3D> &pixel_coords, const double image_scale = 1) const;
 
     /**
      *
@@ -67,7 +68,8 @@ class ReprojectorImpl : public Reprojector {
      */
     void reproject(const mrpt::poses::CPose3DQuat &reproj_pose,
                    cv::Mat_<uchar> &reproj_img,
-                   cv::Mat_<bool> &mask) const override;
+                   cv::Mat_<bool> &mask,
+                   const double image_scale = 1) const override;
 };
 
 };  // namespace posest

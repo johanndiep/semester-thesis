@@ -82,7 +82,7 @@ class Randomizer {
 
 int main(int argc, char *argv[]) {
     // minimal arguments check
-    if (argc != 10) {
+    if (argc < 11 || argc > 18) {
         std::cerr << "pose-estimator tries to find the position where a blurred image was taken from." << std::endl;
         std::cerr << "It reads ground truth data from a dataset, adds a random pose offset of given" << std::endl;
         std::cerr << "length and starts the algorithm. After convergence it calculates the remaining" << std::endl;
@@ -90,7 +90,8 @@ int main(int argc, char *argv[]) {
         std::cerr << std::endl;
         std::cerr << "Usage: " << argv[0]
                   << " [dataset_path] [cam_index] [ref_img_index] [blurred_img_index] [n_images] [initial_offset_pos] "
-                     "[initial_offset_rot] [sigma] [output_file]"
+                     "[initial_offset_rot] [sigma] [output_file] [image_scale] [opt: initial_pose_x] [opt: initial_pose_y] [opt: initial_pose_z] "
+                     "[opt: initial_pose_qw] [opt: initial_pose_qx] [opt: initial_pose_qy] [opt: initial_pose_qz]"
                   << endl;
         return 1;
     }
@@ -106,10 +107,22 @@ int main(int argc, char *argv[]) {
     const double initial_offset_rot = atof(argv[7]);
     params.sigma = atof(argv[8]);
     const std::string output_file(argv[9]);
+    params.exact_initial_pose = false;
+    double image_scale = atof(argv[10]);
+    if (argc == 18) {
+        params.exact_initial_pose = true;
+        params.solved_pose_lower_scale.m_coords[0] = atof(argv[11]);
+        params.solved_pose_lower_scale.m_coords[1] = atof(argv[12]);
+        params.solved_pose_lower_scale.m_coords[2] = atof(argv[13]);
+        params.solved_pose_lower_scale.m_quat[0] = atof(argv[14]);
+        params.solved_pose_lower_scale.m_quat[1] = atof(argv[15]);
+        params.solved_pose_lower_scale.m_quat[2] = atof(argv[16]);
+        params.solved_pose_lower_scale.m_quat[3] = atof(argv[17]);
+    }
 
     // Uncomment the following lines in order to generate a snapshot image after each solving iteration
-    // params.snapshot_path = output_file + ".png";
-    // params.snap_only_final = false;
+    params.snapshot_path = output_file + ".png";
+    params.snap_only_final = false;
 
     // print out parametrization
     cout << endl << "=============================================================" << endl;
@@ -119,10 +132,25 @@ int main(int argc, char *argv[]) {
     cout << "     ref_img_index: " << params.ref_img_index << endl;
     cout << " blurred_img_index: " << params.blurred_img_index << endl;
     cout << "          n_images: " << params.n_images << endl;
-    cout << "initial_offset_pos: " << initial_offset_pos << endl;
-    cout << "initial_offset_rot: " << initial_offset_rot << endl;
+    if (argc == 11) {
+        cout << "initial_offset_pos: " << initial_offset_pos << endl;
+        cout << "initial_offset_rot: " << initial_offset_rot << endl;
+    }
+    else {
+        cout << "initial_offset_pos: " << "ignored" << endl;
+        cout << "initial_offset_rot: " << "ignored" << endl;
+    }
     cout << "       output_file: " << output_file << endl;
     cout << "             sigma: " << params.sigma << endl;
+    if (argc > 11) {
+        cout << "    initial_pose_x: " << params.solved_pose_lower_scale.m_coords[0] << endl;
+        cout << "    initial_pose_y: " << params.solved_pose_lower_scale.m_coords[1] << endl;
+        cout << "    initial_pose_z: " << params.solved_pose_lower_scale.m_coords[2] << endl;
+        cout << "   initial_pose_qw: " << params.solved_pose_lower_scale.m_quat[0] << endl;
+        cout << "   initial_pose_qx: " << params.solved_pose_lower_scale.m_quat[1] << endl;
+        cout << "   initial_pose_qy: " << params.solved_pose_lower_scale.m_quat[2] << endl;
+        cout << "   initial_pose_qz: " << params.solved_pose_lower_scale.m_quat[3] << endl;
+    }
 
     // google logging is used by ceres and needs to be initialized only once
     google::InitGoogleLogging("solver");
@@ -136,41 +164,51 @@ int main(int argc, char *argv[]) {
     params.initial_offset = CPose3DQuat(rnd.rand_pose_offset(initial_offset_pos, initial_offset_rot));
 
     // start the solving process
-    const posest::ExecutionResults *results = params.posest_start(dataset);
+    const posest::ExecutionResults *results = params.posest_start(dataset, image_scale);
 
     // get error after convergence with respect to ground truth
     const CArrayDouble<3> &err_pos = results->get_position_error();
     const CQuaternionDouble &err_rot = results->get_rotation_error();
 
+    // get solved pose
+    const CPose3DQuat &solved_pose = results->get_solved_pose();
+
     // write results to output file
     std::ofstream file;
     file.open(output_file + std::string(".txt"));
-    file << params.cam_index << ",";                    // cam_index
-    file << params.ref_img_index << ",";                // ref_img_index
-    file << params.blurred_img_index << ",";            // blurred_img_index
-    file << params.sigma << ",";                        // depth_perturbation_sigma
-    file << params.initial_offset.m_coords[0] << ",";   // initial_offset_x
-    file << params.initial_offset.m_coords[1] << ",";   // initial_offset_y
-    file << params.initial_offset.m_coords[2] << ",";   // initial_offset_z
-    file << params.initial_offset.m_quat[0] << ",";     // initial_offset_qw
-    file << params.initial_offset.m_quat[1] << ",";     // initial_offset_qx
-    file << params.initial_offset.m_quat[2] << ",";     // initial_offset_qy
-    file << params.initial_offset.m_quat[3] << ",";     // initial_offset_qz
-    file << params.initial_offset.norm() << ",";        // initial_offset_dist
-    file << initial_offset_rot << ",";                  // initial_offset_rot_angle
-    file << params.n_images << ",";                     // n_images
-    file << err_pos[0] << ",";                          // err_x
-    file << err_pos[1] << ",";                          // err_y
-    file << err_pos[2] << ",";                          // err_z
-    file << err_rot[0] << ",";                          // err_qw
-    file << err_rot[1] << ",";                          // err_qx
-    file << err_rot[2] << ",";                          // err_qy
-    file << err_rot[3] << ",";                          // err_qz
-    file << results->get_distance_error() << ",";       // err_dist
-    file << results->get_angular_error() << ",";        // err_rot_angle
-    file << results->get_num_iterations() << ",";       // num_iterations
-    file << results->get_total_time() << ",";           // total_time
-    file << results->has_converged();                   // convergence
+    file << "cam_index: " << params.cam_index << ", ";                              // cam_index
+    file << "ref_img_index: " << params.ref_img_index << ", ";                      // ref_img_index
+    file << "blurred_img_index: " << params.blurred_img_index << ", ";              // blurred_img_index
+    file << "sigma: "<< params.sigma << ",";                                        // depth_perturbation_sigma
+    file << "initial_offset: " << params.initial_offset.m_coords[0] << ",";         // initial_offset_x
+    file << params.initial_offset.m_coords[1] << ",";                               // initial_offset_y
+    file << params.initial_offset.m_coords[2] << ",";                               // initial_offset_z
+    file << params.initial_offset.m_quat[0] << ",";                                 // initial_offset_qw
+    file << params.initial_offset.m_quat[1] << ",";                                 // initial_offset_qx
+    file << params.initial_offset.m_quat[2] << ",";                                 // initial_offset_qy
+    file << params.initial_offset.m_quat[3] << ", ";                                // initial_offset_qz
+    file << "initial_offset_dist: " << params.initial_offset.norm() << ", ";        // initial_offset_dist
+    file << "initial_offset_rot_angle: " << initial_offset_rot << ", ";             // initial_offset_rot_angle
+    file << "n_images: " << params.n_images << ", ";                                // n_images
+    file << "err: " << err_pos[0] << ",";                                           // err_x
+    file << err_pos[1] << ",";                                                      // err_y
+    file << err_pos[2] << ",";                                                      // err_z
+    file << err_rot[0] << ",";                                                      // err_qw
+    file << err_rot[1] << ",";                                                      // err_qx
+    file << err_rot[2] << ",";                                                      // err_qy
+    file << err_rot[3] << ", ";                                                     // err_qz
+    file << "solved_pose: " << solved_pose.m_coords[0] << ",";                      // solved_pose_x
+    file << solved_pose.m_coords[1] << ",";                                         // solved_pose_y
+    file << solved_pose.m_coords[2] << ",";                                         // solved_pose_z
+    file << solved_pose.m_quat[0] << ",";                                           // solved_pose_qw
+    file << solved_pose.m_quat[1] << ",";                                           // solved_pose_qx
+    file << solved_pose.m_quat[2] << ",";                                           // solved_pose_qy
+    file << solved_pose.m_quat[3] << ", ";                                          // solved_pose_qz
+    file << "err_dist: " << results->get_distance_error() << ", ";                  // err_dist
+    file << "err_rot_angle: " << results->get_angular_error() << ", ";              // err_rot_angle
+    file << "num_iterations: " << results->get_num_iterations() << ", ";            // num_iterations
+    file << "total_time: " << results->get_total_time() << ", ";                    // total_time
+    file << "convergence: " << results->has_converged();                            // convergence
     file << endl;
 
     // print summary

@@ -68,7 +68,7 @@ class Dataset {
     std::vector<std::string> cameras;
     std::vector<ImageLogEntry> image_log;
     const std::string base_path;
-
+    
     void readCameraCalibration(std::map<std::string, CameraCalibration> &cams);
 
     void readCameraTrajectory(const mrpt::poses::CPose3DQuat &camera_offset, Trajectory &trajectory);
@@ -129,6 +129,13 @@ class Dataset {
     cv::Mat_<double> readDepthImage(int img_index, int cam_index, double sigma_0) const;
 
     /**
+    * Downscale the depth map for the coarse-to-parse method
+    * @param depth_map is the original depth map
+    * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
+    */
+    cv::Mat_<double> readScaledDepthImage(cv::Mat_<double> depth_map, const double image_scale) const;
+
+    /**
      * Read a blurred image from the dataset
      * @param img_index usually it starts from 1 (and not 0)
      * @param cam_index use camera getCameras()[cam_index]
@@ -137,12 +144,30 @@ class Dataset {
     cv::Mat_<uchar> readBlurredImage(int img_index, int cam_index) const;
 
     /**
+     * Read a blurred image from the dataset and downscale it by a factor
+     * @param img_index usually it starts from 1 (and not 0)
+     * @param cam_index use camera getCameras()[cam_index]
+     * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
+     * @return
+     */
+    cv::Mat_<uchar> readBlurredScaledImage(int img_index, int cam_index, const double image_scale) const;
+
+    /**
      * Read a sharp image from the dataset (converted to grayscale)
      * @param img_index usually it starts from 1 (and not 0)
      * @param cam_index use camera getCameras()[cam_index]
      * @return
      */
     cv::Mat_<uchar> readSharpImage(int img_index, int cam_index) const;
+
+    /**
+    * Read a sharp image from the dataset and downscale it by a factor (converted to grayscale)
+    * @param img_index usually it starts from 1 (and not 0)
+    * @param cam_index use camera getCameras()[can_index]
+    * @param image_scale defines the downscale (i.e. 2 means divide resolution by 2)
+    * @return
+    */
+    cv::Mat_<uchar> readSharpScaledImage(int img_index, int cam_index, const double image_scale) const;
 
     /**
      * Get the pose of a camera when a certain image was taken.

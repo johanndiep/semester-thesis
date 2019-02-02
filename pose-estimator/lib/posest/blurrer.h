@@ -17,6 +17,7 @@ class BlurrerImpl : public Blurrer {
     const int n_images;
     const cv::Mat &ref_image;
     const Reprojector &reprojector;
+    const double image_scale;
 
  public:
     /**
@@ -35,7 +36,8 @@ class BlurrerImpl : public Blurrer {
                 const double exposure_time,
                 const int n_images,
                 const cv::Mat &ref_image,
-                const Reprojector &reprojector);
+                const Reprojector &reprojector,
+                const double image_scale = 1);
 
     /**
      * Generate a blurred image and store it in blurred_img

@@ -96,7 +96,7 @@ class SaveSnapCallback : public ceres::IterationCallback {
             return ceres::SOLVER_CONTINUE;
         }
         // log intermediate pose
-        pose_log << pose.x() << "," << pose.y() << "," << pose.z() << std::endl;
+        pose_log << pose.x() << "," << pose.y() << "," << pose.z() << "," << pose.quat() << std::endl;
 
         // write snapshot
         cv::Mat_<uchar> img;

@@ -1,0 +1,17 @@
+# Camera intrinsic parameters for unreal dataset UrbanCity
+# date: 2018-3-10-15-48-4
+
+numCameras 2
+
+devName cam0
+# resolution: nCols, nRows
+resolution 640 480
+# K: fx fy cx cy with pinhole camera model
+K 320 320 320 240
+
+devName cam1
+# resolution: nCols, nRows
+resolution 640 480
+# K: fx fy cx cy with pinhole camera model
+K 320 320 320 240
+
