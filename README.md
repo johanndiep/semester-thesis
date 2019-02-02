@@ -4,7 +4,9 @@ This GitLab repository contains the Python code for the optimization-based motio
 
 ## Example: Optimization Process
 
-![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif)
+A comparison of a real blurred input image (left) and artificial blurred images generated during optimization (right).
+
+![](https://gitlab.com/jdiep/semester-thesis/blob/3-neural-mesh-reprojection/RelisticRendering-dataset/blurred/cam0/2.png) ![](https://media.giphy.com/media/tsSuRJnwBf1xHhD9Ii/source.gif)
 
 ## Context
 
