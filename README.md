@@ -6,8 +6,7 @@ This GitLab repository contains the Python code for the optimization-based motio
 
 Many current robotics applications, especially autonomous mobile robots, require a robust position and orientation estimation in order to perform autonomous or semi-autonomous tasks. Vision-based techniques such as visual odometry (VO) or simultaneous location and mapping (SLAM) are used to estimate camera movements from a sequence of images. For large scale deployment as the fundamental module for pose estimation, these methods need to work robustly under any circumstances. Unfortunately, they come with practical requirements. In order to extract apparent motions, some conditions must be fulfilled, such as the presence of sufficient illuminations and textures in the environment, large enough scene overlaps between consecutive frames or the dominance of static scenes. The work in the context of this semester thesis is addressing the latter case, in particular the occurrence of motion blur due to rapid camera movements in combination with a long exposure time.
 
-
-### Installation
+## Installation
 
 This installation was tested for Ubuntu 16.04 LTS. For other operating sys-
 tems, changes or additional packages might be required. The following
@@ -27,14 +26,14 @@ packages were used:
 
 Additional libraries might be required, install on request.
 
-### Dataset
+## Dataset
 
 For evaluation, rendered dataset by Peidong Liu can be used:
 
 * [Realistic Rendering](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/RelisticRendering-dataset)
 * [Urban City](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/UrbanCity%20dataset)
 
-### Code Structure
+## Code Structure
 
 The [source code](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
 ing methods:
