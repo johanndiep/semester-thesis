@@ -39,7 +39,7 @@ For evaluation, rendered dataset by Peidong Liu can be used:
 The [source code](https://gitlab.com/jdiep/semester-thesis/tree/3-neural-mesh-reprojection/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
 ing methods:
 
-* **dataset.py:** 
+* **dataset.py:**<br/>
 This class is responsible for reading out the information from the rendered dataset. Additionally, it also contains the methods to return the scaled as well as the perturbed information.
 * **framework.py:** 
 This class sets up the framework for the optimization process. It initializes the pose with a disturbance which is subsequently mapped to se(3)-formulation. Further, the objective function is defined here.
