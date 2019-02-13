@@ -8,8 +8,7 @@ Many current robotics applications, especially autonomous mobile robots, require
 
 ## Installation
 
-This installation was tested for Ubuntu 16.04 LTS. For other operating sys-
-tems, changes or additional packages might be required. The following
+This installation was tested for Ubuntu 16.04 LTS. For other operating systems, changes or additional packages might be required. The following
 packages were used:
 
 * [Python 3.6.5](https://www.python.org/downloads/source/)
