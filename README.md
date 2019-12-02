@@ -34,8 +34,7 @@ For evaluation, rendered dataset by Peidong Liu can be used:
 
 ## Code Structure
 
-The [source code](https://gitlab.com/jdiep/semester-thesis/tree/master/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its correspond-
-ing methods:
+The [source code](https://gitlab.com/jdiep/semester-thesis/tree/master/neural_mesh_renderer/OBMBACPE/lib) folder contains all the essential classes with its corresponding methods:
 
 * **dataset.py:**<br/>
 This class is responsible for reading out the information from the rendered dataset. Additionally, it also contains the methods to return the scaled as well as the perturbed information.
