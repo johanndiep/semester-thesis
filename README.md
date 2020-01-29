@@ -75,4 +75,3 @@ Artificial blurred images generated during optimization.
 ## Authors
 
 * Johann Diep (MSc Student Mechanical Engineering, ETH Zurich, jdiep@student.ethz.ch)
-* Peidong Liu (Supervisor, peidong.liu@inf.ethz.ch)
