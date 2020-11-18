@@ -66,7 +66,7 @@ This program generates sharp and blurry images at arbitrary poses.
 
 Artificial blurred images generated during optimization.
 
-![](https://user-content.gitlab-static.net/9f9d49ff9207a1001e0f376e8a05c556efb70c7c/68747470733a2f2f6d656469612e67697068792e636f6d2f6d656469612f593365306447594c6a53304a65674f4c41572f67697068792e676966)
+![](https://media.giphy.com/media/Y3e0dGYLjS0JegOLAW/giphy.gif)
 
 ## Version
 
